@@ -1,0 +1,1930 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warhammer 40k: Campanha do Capítulo (Grimdark 12.3 - Report Refinements)</title>
+    <style>
+        :root {
+            --bg-dark: #050709;
+            --panel-bg: #0e1217;
+            --gold: #c5a059;
+            --gold-bright: #f3d085;
+            --red: #8b0000;
+            --blue: #1e3a8a;
+            --green: #065f46;
+            --danger: #ea696c;
+            --text-light: #d1d5db;
+            --border-color: #1a2330;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background-color: #030405;
+            border-bottom: 2px solid var(--gold);
+            padding: 14px 22px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chapter-title {
+            color: var(--gold-bright);
+            font-weight: bold;
+            letter-spacing: 1px;
+            font-size: 1.05em;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .resource-container {
+            display: flex;
+            gap: 12px;
+            font-size: 0.94em;
+            align-items: center;
+        }
+
+        .res-badge {
+            background: #131a24;
+            padding: 6px 10px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+        .header-btn {
+            padding: 6px 12px !important;
+            font-size: 0.9em !important;
+        }
+
+        .main-layout {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 68px);
+        }
+
+        .left-section {
+            width: 280px;
+            background-color: var(--panel-bg);
+            border-right: 2px solid var(--border-color);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+        }
+
+        .section-title {
+            color: var(--gold);
+            text-transform: uppercase;
+            font-size: 0.72em;
+            letter-spacing: 1.2px;
+            border-bottom: 1px solid var(--gold);
+            padding-bottom: 3px;
+            margin-top: 0;
+        }
+
+        .center-section {
+            flex: 1;
+            background-color: #080b0f;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+        }
+
+        .planet-management-card {
+            background: #121822;
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--gold);
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+        }
+
+        .planet-management-card.mobilized {
+            border-left: 4px solid var(--gold-bright);
+            background: #161205;
+        }
+
+        .planet-management-card.threat {
+            border-left-color: #f59e0b;
+            background: #231b18;
+        }
+        .planet-management-card.attack {
+            border-left-color: var(--danger);
+            background: #2a1618;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .badge-threat { background: #f59e0b; color: #000; }
+        .badge-attack { background: var(--danger); color: #fff; }
+
+        .slot-grid {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            margin-top: 5px;
+        }
+
+        .slot {
+            width: 28px;
+            height: 28px;
+            background: #090d12;
+            border: 1px dashed var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85em;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .slot:hover {
+            border-color: var(--gold);
+        }
+
+        .slot.filled {
+            border: 1px solid var(--gold);
+            background: #1a222f;
+        }
+
+        .slot.building {
+            border: 1px dashed var(--gold-bright);
+            background: #1f1b09;
+            color: var(--gold-bright);
+            font-size: 0.65em;
+            text-align: center;
+        }
+
+        .slot.ruins {
+            border: 1px solid var(--danger);
+            background: #2c1a1d;
+            font-size: 0.7em;
+            color: #fff;
+            width: auto;
+            padding: 0 6px;
+        }
+
+        .right-section {
+            width: 320px;
+            background-color: var(--panel-bg);
+            border-left: 2px solid var(--border-color);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+        }
+
+        .op-card {
+            background: #080b0f;
+            border: 1px solid var(--border-color);
+            border-left: 3px solid var(--red);
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.78em;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .op-card.mobilized {
+            border-left: 3px solid var(--gold-bright);
+            background: #161205;
+        }
+
+        button {
+            background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+            color: white;
+            border: 1px solid var(--gold);
+            padding: 5px 8px;
+            text-align: left;
+            cursor: pointer;
+            font-weight: 600;
+            border-radius: 4px;
+            transition: all 0.2s;
+            font-size: 0.75em;
+        }
+
+        button:hover {
+            background: linear-gradient(180deg, #374151 0%, #1f2937 100%);
+            border-color: var(--gold-bright);
+            box-shadow: 0 0 5px rgba(197, 160, 89, 0.3);
+        }
+
+        button:disabled {
+            background: #11151c;
+            border-color: #263040;
+            color: #4a5568;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .doctrine-btn {
+            background: #131a24;
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            padding: 6px 10px;
+            text-align: left;
+            cursor: pointer;
+            font-size: 0.78em;
+            border-radius: 4px;
+            width: 100%;
+        }
+
+        .doctrine-btn.active {
+            background: linear-gradient(180deg, #78350f 0%, #451a03 100%);
+            border-color: var(--gold-bright);
+            color: var(--gold-bright);
+            font-weight: bold;
+        }
+
+        .tab-nav {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 6px;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: #9ca3af;
+            font-size: 0.8em;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+        .tab-btn.active {
+            color: var(--gold-bright);
+            border-bottom: 2px solid var(--gold-bright);
+            font-weight: bold;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: flex; flex-direction: column; gap: 8px; }
+
+        .log-area {
+            background: #030405;
+            border: 1px solid var(--border-color);
+            padding: 8px;
+            font-size: 0.75em;
+            color: #8892b0;
+            border-radius: 4px;
+            line-height: 1.4;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 5, 8, 0.92);
+            z-index: 100;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .modal-content {
+            background: #0b0f15;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .tooltip-container {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .tooltip-box {
+            visibility: hidden;
+            width: 350px; /* <--- Largura do Tooltip */
+            background-color: #111827;
+            color: #e5e7eb;
+            text-align: left;
+            border-radius: 4px;
+            padding: 10px;
+            border: 1px solid var(--gold);
+            position: absolute;
+            z-index: 9999;
+            top: 0;
+            left: 105%;
+            opacity: 0; /* <--- Tooltip oculto por padrão */
+            transition: opacity 0.25s; /* <--- Transição do Tooltip */
+            font-size: 1.15em;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.8);
+			pointer-events: none;
+        }
+
+        .tooltip-container:hover .tooltip-box {
+            visibility: visible;
+			z-index: 999999 !important;
+            opacity: 1;
+        }
+
+        .tech-container {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+            margin-top: 5px;
+			overflow: visible !important;
+        }
+		
+        .tech-tree-column {
+            flex: 1;
+            background: #080b0f;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+			position: relative;
+			z-index: 1;
+        }
+		
+		.tech-tree-column:hover {
+   			z-index: 9999; !important
+		}
+		
+		.tech-tree-column:last-child .tooltip-box {
+			left: auto !important;
+			right: 105% !important;
+		}
+
+        .tech-subgrid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+		
+        .tech-node-small {
+            background: #141c27;
+            border: 1px solid var(--border-color);
+            padding: 6px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 0.8em;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 65px;
+            position: relative;
+        }
+		
+		.tech-node-small:hover {
+   			z-index: 999999 !important;
+		}
+
+        .tech-node-small.unlocked {
+            border-color: #10b981;
+            background: #062318;
+        }
+		
+
+        .tech-node-small.locked {
+            opacity: 0.90;
+            filter: grayscale(0.8);
+            border-style: dashed;
+        }
+
+        .tech-level-badge {
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            font-size: 0.6em;
+            color: var(--gold-bright);
+            font-weight: bold;
+        }
+
+        .report-section {
+            background: #080b0f;
+            border: 1px solid var(--border-color);
+            border-left: 3px solid var(--gold);
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .report-section h4 {
+            color: var(--gold-bright);
+            margin: 0 0 6px 0;
+            font-size: 0.85em;
+        }
+
+        .combat-log-btn {
+            background: #172554;
+            border: 1px solid #3b82f6;
+            color: #93c5fd;
+            padding: 5px 10px;
+            margin: 4px 0;
+            display: block;
+            width: 100%;
+            text-align: left;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.82em;
+        }
+        .combat-log-btn:hover {
+            background: #1e3a8a;
+            color: white;
+        }
+
+        .faction-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.72em;
+            font-weight: bold;
+            margin-top: 3px;
+        }
+        .faction-orks { background: #14532d; color: #4ade80; border: 1px solid #22c55e; }
+        .faction-hereges { background: #7f1d1d; color: #fca5a5; border: 1px solid #ef4444; }
+        .faction-necrons { background: #064e3b; color: #6ee7b7; border: 1px solid #10b981; }
+		.faction-neutral { background: #7e8281; color: #d1e0e0; border: 1px solid #d1e0e0; }
+
+        .diff-facil { color: #34d399; font-weight: bold; }
+        .diff-medio { color: #fbbf24; font-weight: bold; }
+        .diff-dificil { color: #f87171; font-weight: bold; }
+        .diff-muito-dificil { color: #831843; background: #fce7f3; padding: 1px 4px; border-radius: 3px; font-weight: bold; border: 1px solid #db2777; }
+        
+        .build-card {
+            background: #080b0f;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .build-card:hover {
+            border-color: var(--gold);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="chapter-title">
+            <span>🛡️ CAMPANHA DO CAPÍTULO</span>
+            <span style="font-size: 0.8em; color: #9ca3af;">Ciclo <span id="header-turn">1</span> | Dízimo em: <span id="header-tithe">10</span> turnos</span>
+        </div>
+        <div class="resource-container">
+            <div class="res-badge">📜 Req: <span id="res-req">1</span></div>
+            <div class="res-badge">📦 Mat: <span id="res-mat">250</span></div>
+            <div class="res-badge">🔬 Pesq: <span id="res-research">0</span></div>
+            <div class="res-badge">⚔️ Cont: <span id="res-troops">3</span>/<span id="res-max-troops">3</span></div>
+            <button onclick="toggleModal('req-modal', true)" class="header-btn" style="background: linear-gradient(180deg, #78350f 0%, #451a03 100%); border-color: #f59e0b;">🏛️ Requisições</button>
+            <button onclick="toggleModal('quartel-modal', true)" class="header-btn" style="background: linear-gradient(180deg, #374151 0%, #1f2937 100%);">⚔️ Quartel</button>
+            <button onclick="toggleModal('tech-modal', true)" class="header-btn" style="background: linear-gradient(180deg, #1e3a8a 0%, #172554 100%);">🔬 Tech</button>
+        </div>
+    </header>
+
+    <div class="main-layout">
+        <div class="left-section">
+            <h3 class="section-title">Status do Exército</h3>
+            <div id="roster-summary" style="font-size: 0.75em; background: #080b0f; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; display: flex; flex-direction: column; gap: 4px;"></div>
+            <button onclick="toggleModal('quartel-modal', true)">Gerenciar Quartel & Doutrinas ➔</button>
+
+            <h3 class="section-title" style="margin-top: 15px;">Relatório Estratégico</h3>
+            <div class="log-area">
+                <div>Setor sob vigilância dos Astartes.</div>
+                <button onclick="toggleModal('report-modal', true)" style="background: linear-gradient(180deg, #374151 0%, #1f2937 100%); width: 100%; text-align: center; margin-top: 4px;">📄 Ver Relatório do Turno</button>
+                <button onclick="resetTurnState()" style="background: linear-gradient(180deg, #1f2937 0%, #111827 100%); width: 100%; text-align: center;">🔄 Reverter Turno</button>
+                <button onclick="clearSave()" style="background: linear-gradient(180deg, #581c87 0%, #3b0764 100%); width: 100%; text-align: center; border-color: #a855f7; margin-top: 4px;">🗑️ Apagar Save e Reiniciar</button>
+            </div>
+        </div>
+
+        <div class="center-section">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 class="section-title" style="margin:0;">Domínios e Conquistas Estelares</h3>
+                <div style="display: flex; gap: 8px;">
+                    <button id="btn-probe" onclick="toggleProbe()" style="background: linear-gradient(180deg, #1e3a8a 0%, #172554 100%); padding: 4px 8px;">📡 Enviar Sonda (100 Mat)</button>
+                    <button onclick="nextTurn()" style="background: linear-gradient(180deg, #8b0000 0%, #4a0000 100%); padding: 4px 12px;">PASSAR TURNO ⏩</button>
+                </div>
+            </div>
+            <div id="probe-status-bar" style="font-size: 0.75em; background: #0e1726; border: 1px solid #1d4ed8; color: #93c5fd; padding: 6px; border-radius: 4px; display: none;"></div>
+            <div id="planets-container" style="display: flex; flex-direction: column; gap: 6px;"></div>
+        </div>
+
+        <div class="right-section">
+            <h3 class="section-title">Operações Ativas do Setor (3)</h3>
+            <div id="operations-container" style="display: flex; flex-direction: column; gap: 6px;"></div>
+        </div>
+    </div>
+
+    <!-- MODAL CONSTRUÇÃO DE SLOTS -->
+    <div id="build-modal" class="modal-overlay">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); padding-bottom: 10px;">
+            <h2 style="color: var(--gold-bright); margin:0; font-size: 1.1em;">🏗️ CONSTRUÇÃO DE INFRAESTRUTURA</h2>
+            <button onclick="toggleModal('build-modal', false)" style="background: #8b0000; padding: 4px 10px;">Cancelar ✖</button>
+        </div>
+        <div class="modal-content" style="gap: 10px;">
+            <div id="build-modal-subtitle" style="font-size: 0.85em; color: #9ca3af;">Selecione a estrutura para iniciar a construção:</div>
+            
+            <div class="build-card">
+                <div>
+                    <strong>🌾 Fazenda</strong><br>
+                    <small style="color: #9ca3af;">Gera 25 Materiais por turno.</small>
+                </div>
+                <button onclick="confirmBuild('fazenda', 50)">Construir (50 Mat)</button>
+            </div>
+
+            <div class="build-card">
+                <div>
+                    <strong>🏕️ Assentamento</strong><br>
+                    <small style="color: #9ca3af;">Aumenta o limite de Contingente do Capítulo em +1.</small>
+                </div>
+                <button onclick="confirmBuild('assentamento', 100)">Construir (100 Mat)</button>
+            </div>
+
+            <div class="build-card">
+                <div>
+                    <strong>⚔️ Quartel de Treinamento</strong><br>
+                    <small style="color: #9ca3af;">Permite treinar até +3 Fuzileiros por turno.</small>
+                </div>
+                <button onclick="confirmBuild('quartel', 150)">Construir (150 Mat)</button>
+            </div>
+
+            <div class="build-card">
+                <div>
+                    <strong>🔬 Laboratório de Pesquisa</strong><br>
+                    <small style="color: #9ca3af;">Gera Pontos de Pesquisa Tecnológica a cada ciclo.</small>
+                </div>
+                <button onclick="confirmBuild('laboratorio', 250)">Construir (250 Mat)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE RELATÓRIO DO TURNO -->
+    <div id="report-modal" class="modal-overlay">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); padding-bottom: 10px;">
+            <h2 style="color: var(--gold-bright); margin:0; font-size: 1.1em;">📊 RELATÓRIO DO CICLO ESTRATÉGICO</h2>
+            <button onclick="toggleModal('report-modal', false)" style="background: #8b0000; padding: 4px 10px;">Fechar ✖</button>
+        </div>
+        <div class="modal-content" id="report-modal-body"></div>
+    </div>
+
+    <!-- MODAL DE DIÁRIO DE COMBATE -->
+    <div id="combat-log-modal" class="modal-overlay">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">
+            <h2 style="color: #93c5fd; margin:0; font-size: 1.1em;" id="combat-log-title">⚔️ DIÁRIO TÁTICO DE COMBATE</h2>
+            <button onclick="toggleModal('combat-log-modal', false)" style="background: #1e3a8a; padding: 4px 10px;">Fechar ✖</button>
+        </div>
+        <div class="modal-content" id="combat-log-body" style="color: #cbd5e1; font-size: 0.85em; line-height: 1.5;"></div>
+    </div>
+
+    <!-- MODAL DE REQUISIÇÕES -->
+    <div id="req-modal" class="modal-overlay">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f59e0b; padding-bottom: 10px;">
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <h2 style="color: #fbbf24; margin:0; font-size: 1.1em;">🏛️ REQUISIÇÕES AO IMPÉRIO</h2>
+                <div class="res-badge" style="font-size: 0.8em;">📜 Requisições Disponíveis: <span id="modal-res-req">1</span></div>
+            </div>
+            <button onclick="toggleModal('req-modal', false)" style="background: #78350f; padding: 4px 10px;">Fechar ✖</button>
+        </div>
+        <div class="modal-content" style="gap: 12px;">
+            <div style="background:#080b0f; border:1px solid var(--border-color); padding:10px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
+                <div><strong>Carga de Suprimentos</strong><br><small>Custo: 1 Req | Recebe +250 Materiais.</small></div>
+                <button id="btn-req-sup" onclick="useRequisition('suprimentos')">Requisitar</button>
+            </div>
+            <div style="background:#080b0f; border:1px solid var(--border-color); padding:10px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
+                <div><strong>Ampliar Rota Comercial</strong><br><small id="rota-desc">Custo: 1 Req | +50 Mat/turno por 10 turnos.</small></div>
+                <button id="btn-req-rota" onclick="useRequisition('rota')">Requisitar</button>
+            </div>
+            <div style="background:#080b0f; border:1px solid var(--border-color); padding:10px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
+                <div><strong>Reforços de Astartes</strong><br><small>Custo: 1 Req | Recruta 1 Fuzileiro.</small></div>
+                <button id="btn-req-ref" onclick="useRequisition('reforcos')">Requisitar</button>
+            </div>
+            <div style="background:#080b0f; border:1px solid var(--border-color); padding:10px; border-radius:4px; display:flex; justify-content:space-between; align-items:center; border-left: 3px solid var(--red);">
+                <div><strong>Exterminatus</strong><br><small>Custo: 10 Req | Destrói um planeta.</small></div>
+                <button onclick="openExterminatusSelector()" style="background: #8b0000; border-color: #ff4d4d;">Autorizar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EXTERMINATUS -->
+    <div id="exterminatus-modal" class="modal-overlay">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--red); padding-bottom: 10px;">
+            <h2 style="color: #f87171; margin:0; font-size: 1.1em;">🔴 PROTOCOLO EXTERMINATUS</h2>
+            <button onclick="toggleModal('exterminatus-modal', false)" style="background: #8b0000; padding: 4px 10px;">Cancelar ✖</button>
+        </div>
+        <div class="modal-content" style="gap: 10px; font-size: 0.85em;">
+            <div>Selecione o mundo condenado:</div>
+            <div id="exterminatus-planet-list" style="display: flex; flex-direction: column; gap: 6px; margin-top: 10px;"></div>
+        </div>
+    </div>
+
+    <!-- MODAL DE COMBATE -->
+    <div id="combat-modal" class="modal-overlay">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); padding-bottom: 10px;">
+            <h2 style="color: var(--gold-bright); margin:0; font-size: 1.1em;" id="combat-modal-title">⚔️ ALOCAÇÃO DE FORÇAS</h2>
+            <button onclick="toggleModal('combat-modal', false)" style="background: #8b0000; padding: 4px 10px;">Cancelar ✖</button>
+        </div>
+        <div class="modal-content" style="gap: 12px; font-size: 0.85em;">
+            <div id="combat-target-info" style="color: var(--gold);">Alvo: Setor</div>
+            
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label>🔹 Fuzileiros Disponíveis: <span id="disp-fuz">0</span></label>
+                <input type="number" id="input-fuz" min="0" value="0" style="background: #030405; color: white; border: 1px solid var(--border-color); padding: 4px; border-radius: 3px;">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label>🔸 Terminators Disponíveis: <span id="disp-term">0</span></label>
+                <input type="number" id="input-term" min="0" value="0" style="background: #030405; color: white; border: 1px solid var(--border-color); padding: 4px; border-radius: 3px;">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label>⚙️ Dreadnoughts Disponíveis: <span id="disp-dread">0</span></label>
+                <input type="number" id="input-dread" min="0" value="0" style="background: #030405; color: white; border: 1px solid var(--border-color); padding: 4px; border-radius: 3px;">
+            </div>
+            <div style="margin-top: auto; display: flex; justify-content: flex-end; gap: 10px;">
+                <button onclick="confirmAndQueueCombat()" style="background: linear-gradient(180deg, #8b0000 0%, #4a0000 100%); padding: 6px 14px;">Reservar Tropas para o Fim do Turno ➔</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DO QUARTEL-GENERAL -->
+    <div id="quartel-modal" class="modal-overlay">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); padding-bottom: 10px;">
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <h2 style="color: var(--gold-bright); margin:0; font-size: 1.1em;">⚔️ QUARTEL-GENERAL</h2>
+                <div class="res-badge" style="font-size: 0.8em;">⚔️ Contingente: <span id="modal-res-troops">3</span>/<span id="modal-res-max-troops">3</span></div>
+            </div>
+            <button onclick="toggleModal('quartel-modal', false)" style="background: #8b0000; padding: 4px 10px;">Fechar ✖</button>
+        </div>
+        <div class="modal-content" style="flex-direction: column; gap: 15px;">
+            
+            <div class="tab-nav">
+                <button class="tab-btn active" onclick="switchQuartelTab('unidades')">🛡️ Doutrinas & Tropas</button>
+                <button class="tab-btn" onclick="switchQuartelTab('inimigos')">👁️ Arquivo de Inimigos</button>
+            </div>
+
+            <!-- ABA 1: UNIDADES E DOUTRINAS -->
+            <div id="tab-unidades" class="tab-content active" style="flex-direction: row; gap: 15px;">
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 10px; background: #080b0f; padding: 12px; border: 1px solid var(--border-color); border-radius: 5px;">
+                    <h3 style="color: var(--gold); margin:0; font-size: 0.9em;">📜 Doutrina de Combate Ativa</h3>
+                    <button class="doctrine-btn" id="doc-btn-nenhuma" onclick="selectDoctrine('nenhuma')"><strong>Nenhuma</strong><br><small>Sem bônus.</small></button>
+                    <button class="doctrine-btn" id="doc-btn-devastacao" onclick="selectDoctrine('devastacao')"><strong>Devastação</strong><br><small>+10% Poder total.</small></button>
+                    <button class="doctrine-btn" id="doc-btn-tatica" onclick="selectDoctrine('tatica')"><strong>Tática</strong><br><small>+1 Resistência por rodada (máx +5).</small></button>
+                    <button class="doctrine-btn" id="doc-btn-assalto" onclick="selectDoctrine('assalto')"><strong>Assalto</strong><br><small>+5% Iniciativa flat em todas as rodadas & +5 Poder na 1ª rodada.</small></button>
+                </div>
+
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 10px;">
+                    <h3 style="color: var(--gold); margin:0; font-size: 0.9em;">Recrutamento</h3>
+                    <div id="recruitment-limit-info" style="font-size: 0.75em; color: #f59e0b;">Limite de treino: 0/3 Fuzileiros por turno.</div>
+                    
+                    <div style="background:#080b0f; border:1px solid var(--border-color); padding:8px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
+                        <div><strong>Esquadrão de Fuzileiros</strong><br><small>50 Mat | Versátil</small></div>
+                        <button onclick="recruitUnit('fuzileiro')">Recrutar</button>
+                    </div>
+                    <div style="background:#080b0f; border:1px solid var(--border-color); padding:8px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
+                        <div><strong>Esquadrão de Exterminadores</strong><br><small>125 Mat | Veterano</small></div>
+                        <button id="btn-term" onclick="recruitUnit('terminator')" disabled>Bloqueado (Requer Tecnologia)</button>
+                    </div>
+                    <div style="background:#080b0f; border:1px solid var(--border-color); padding:8px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
+                        <div><strong>Dreadnought</strong><br><small>400 Mat | Relíquia</small></div>
+                        <button id="btn-dread" onclick="recruitUnit('dreadnought')" disabled>Bloqueado (Requer Tecnologia)</button>
+                    </div>
+                </div>
+
+                <div style="flex: 1; background: #080b0f; border: 1px solid var(--border-color); padding: 12px; border-radius: 5px;">
+                    <h3 style="color: var(--gold); margin-top:0; font-size: 0.9em;">Roster Consolidado</h3>
+                    <div id="quartel-roster-details" style="font-size: 0.8em; display: flex; flex-direction: column; gap: 8px; color: #9ca3af;"></div>
+                </div>
+            </div>
+
+            <!-- ABA 2: ARQUIVO DE INIMIGOS COMPLETO -->
+            <div id="tab-inimigos" class="tab-content">
+                <div style="font-size: 0.82em; color: #9ca3af; margin-bottom: 5px;">Relatórios de inteligência militar detalhando características e habilidades operacionais das forças hostis:</div>
+                
+                <div style="background: #080b0f; border: 1px solid var(--border-color); padding: 10px; border-radius: 5px; border-left: 3px solid #ef4444; display: flex; flex-direction: column; gap: 6px;">
+                    <h4 style="color: #f87171; margin: 0;">🔴 Astartes Hereges</h4>
+                    <div style="font-size: 0.82em; line-height: 1.4;">
+                        <strong style="color: #fca5a5;">Morte ao Falso Imperador!</strong><br>
+                        A chance de unidades aliadas morrerem aumenta contra esta facção.
+                  </div>
+                    <div style="font-size: 0.82em; line-height: 1.4; border-top: 1px dashed #374151; padding-top: 4px;">
+                        <strong style="color: #fca5a5;">Deixe a Galáxia Queimar!</strong><br>
+                        Esta facção tem mais chance de destruir construções enquanto estiverem atacando um de seus planetas.
+                  </div>
+                </div>
+
+                <div style="background: #080b0f; border: 1px solid var(--border-color); padding: 10px; border-radius: 5px; border-left: 3px solid #22c55e; display: flex; flex-direction: column; gap: 6px;">
+                    <h4 style="color: #4ade80; margin: 0;">🟢 Orks</h4>
+                    <div style="font-size: 0.82em; line-height: 1.4;">
+                        <strong style="color: #86efac;">DAKKA! DAKKA! DAKKA!</strong><br>
+                        Unidades aliadas tem chance de receber um segundo ataque na mesma rodada de combate contra esta facção.
+                  </div>
+                    <div style="font-size: 0.82em; line-height: 1.4; border-top: 1px dashed #374151; padding-top: 4px;">
+                        <strong style="color: #86efac;">WAAAGH!!!</strong><br>
+                        Durante uma rodada de combate, esta facção tem chance de começar uma <strong>WAAAGH!!!</strong> Naquela rodada, a chance de unidades aliadas morrerem aumenta muito, e a chance de DAKKA! DAKKA! DAKKA! ativar é dobrada.
+                  </div>
+                </div>
+
+                <div style="background: #080b0f; border: 1px solid var(--border-color); padding: 10px; border-radius: 5px; border-left: 3px solid #10b981; display: flex; flex-direction: column; gap: 6px;">
+                    <h4 style="color: #6ee7b7; margin: 0;">🔵 Necrons</h4>
+                    <div style="font-size: 0.82em; line-height: 1.4;">
+                        <strong style="color: #a7f3d0;">Armamento Gauss</strong><br>
+                        Esta facção ignora parte da resistência de unidades aliadas durante combates. 
+                  </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MODAL DE TECH -->
+    <div id="tech-modal" class="modal-overlay">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); padding-bottom: 10px;">
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <h2 style="color: var(--gold-bright); margin:0; font-size: 1.1em;">🔬 ÁRVORE TECNOLÓGICA</h2>
+                <div class="res-badge" style="font-size: 0.8em;">🔬 Pesquisa: <span id="tech-modal-res">0</span></div>
+            </div>
+            <button onclick="toggleModal('tech-modal', false)" style="background: #8b0000; padding: 4px 10px;">Fechar ✖</button>
+        </div>
+        <div class="tech-container">
+            <div class="tech-tree-column" style="border-top: 4px solid var(--red);">
+                <h3 style="color: #f87171; margin:0; font-size: 0.9em;">🔴 MILITAR</h3>
+                <div class="tech-subgrid" id="tech-grid-militar"></div>
+            </div>
+            <div class="tech-tree-column" style="border-top: 4px solid var(--blue);">
+                <h3 style="color: #60a5fa; margin:0; font-size: 0.9em;">🔵 PRODUTIVO</h3>
+                <div class="tech-subgrid" id="tech-grid-produtivo"></div>
+            </div>
+            <div class="tech-tree-column" style="border-top: 4px solid var(--green);">
+                <h3 style="color: #34d399; margin:0; font-size: 0.9em;">🟢 GERAL</h3>
+                <div class="tech-subgrid" id="tech-grid-geral"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME OVER MODAL -->
+    <div id="gameover-modal" class="modal-overlay" style="background: rgba(10, 2, 2, 0.96);">
+        <div class="modal-content" style="align-items: center; justify-content: center; text-align: center; border-color: var(--red);">
+            <h1 style="color: #ef4444; font-size: 2em; margin-bottom: 5px;">💀 CAPÍTULO ANIQUILADO</h1>
+            <p style="color: #9ca3af; max-width: 400px; line-height: 1.5;">O Planeta Natal foi perdido ou o Capítulo sucumbiu às trevas.</p>
+            <button onclick="clearSaveAndReload()" style="background: linear-gradient(180deg, #8b0000 0%, #4a0000 100%); padding: 10px 20px; font-size: 1em; margin-top: 20px;">🔄 Recomeçar</button>
+        </div>
+    </div>
+
+    <script>
+        let game = {
+            turn: 1,
+            materials: 250,
+            research: 0,
+            requisition: 1,
+            maxTroops: 3,
+            negativeTurnsCount: 0,
+            activeTradeRoutes: [],
+            probeActive: false,
+            probeConsecutiveTurns: 0,
+            fuzileirosTrainedThisTurn: 0,
+            doutrinaAtiva: 'nenhuma',
+            pendingDoctrine: null,
+            requisitionsUsedThisTurn: { suprimentos: false, rota: false, reforcos: false },
+            units: {
+                fuzileiro: { count: 3, power: 5, resistance: 5 },
+                terminator: { count: 0, power: 12, resistance: 8 },
+                dreadnought: { count: 0, power: 20, resistance: 15 }
+            },
+            techs: {
+                medo: { level: 0, max: 5 },
+                terminators: { level: 0, max: 1 },
+                probes: { level: 0, max: 1 },
+                dreadnought: { level: 0, max: 1 },
+                farmboost: { level: 0, max: 2 },
+                logistics: { level: 0, max: 1 },
+                academic: { level: 0, max: 1 }
+            }
+        };
+
+        const TECH_DEFINITIONS = {
+            militar: [
+                { id: 'medo', name: 'Eles desconhecerão o Medo', emoji: '🛡️', pos: 'MA2', reqFortress: 1, costRes: 1, costMat: 0, dependsOn: null, desc: 'Reduz a chance de suas unidades ficarem abaladas durante combates em 4% por nível.', maxLevel: 5 },
+                { id: 'terminators', name: 'Armadura Indomável', emoji: '🦾', pos: 'MB2', reqFortress: 2, costRes: 3, costMat: 100, dependsOn: null, desc: 'Desbloqueia o recrutamento de Terminators no Quartel.' },
+                { id: 'dreadnought', name: 'Sarcófago Ancestral', emoji: '⚙️', pos: 'MC2', reqFortress: 4, costRes: 5, costMat: 250, dependsOn: 'terminators', desc: 'Desbloqueia o recrutamento de Dreadnoughts no Quartel.' }
+            ],
+            produtivo: [
+                { id: 'farmboost', name: 'Hidroponia Avançada', emoji: '🌾', pos: 'PA2', reqFortress: 2, costRes: 1, costMat: 100, dependsOn: null, desc: 'Cada Fazenda gera +25 Materiais extras.', maxLevel: 1 }
+            ],
+            geral: [
+                { id: 'logistics', name: 'Logística Imperial', emoji: '📦', pos: 'GA1', reqFortress: 2, costRes: 3, costMat: 0, dependsOn: null, desc: 'Reduz manutenção fixa em 50 Mat.' },
+                { id: 'academic', name: 'Infraestrutura Acadêmica', emoji: '🏛️', pos: 'GA2', reqFortress: 3, costRes: 0, costMat: 300, dependsOn: 'logistics', desc: 'Permite contruir Laboratórios, que geram pontos de Pesquisa 🔬' },
+                { id: 'probes', name: 'Sondas de Alta Precisão', emoji: '📡', pos: 'GB1', reqFortress: 1, costRes: 2, costMat: 0, dependsOn: null, desc: 'Reduz o custo para enviar sondas em busca de novos planetas, além disso, elas os encontram mais rapidamente.' }
+            ]
+        };
+
+        const FACCOES_INIMIGAS = {
+            orks: { nome: "Orks", badgeClass: "faction-orks" },
+            hereges: { nome: "Astartes Hereges", badgeClass: "faction-hereges" },
+            necrons: { nome: "Necrons", badgeClass: "faction-necrons" },
+			neutral: { nome: "Mercenários", badgeClass: "faction-neutral" }
+        };
+
+        let turnSnapshot = null;
+        let currentReport = {
+            turnNum: 1,
+            resources: { matProduced: 0, resProduced: 0, maintenance: 0, tradeIncome: 0, opIncome: 0, finalMat: 250 },
+            planetEvents: [], operations: [], combatLogs: [], alerts: ["Campanha iniciada. Glória ao Imperador."]
+        };
+
+        let planets = [
+            {
+                id: 1,
+                name: "Baal Primus (Mundo Natal)",
+                status: "colonizado",
+                isHomeWorld: true,
+                raidStatus: "SAFE",
+                threatTurns: 0,
+                attackTurns: 0,
+                expansionLevel: 1,
+                maxExpansion: 5,
+                trait: "+3 de Contingente",
+                traitType: "contingent",
+                slots: ['quartel', 'fazenda', 'vazio', 'vazio'],
+                mobilizedForces: null
+            }
+        ];
+
+        let activeOperations = [
+            { id: 101, title: "Saque a Comboio Ork", faction: "orks", diff: 1, diffName: "Fácil", rewardMat: 100, rewardResearch: 0, mobilizedForces: null },
+            { id: 102, title: "Purificação de Culto Herético", faction: "hereges", diff: 2, diffName: "Médio", rewardMat: 150, rewardResearch: 0, mobilizedForces: null },
+            { id: 103, title: "Escavação de Tumba Necron", faction: "necrons", diff: 3, diffName: "Difícil", rewardMat: 200, rewardResearch: 1, mobilizedForces: null }
+        ];
+
+        let pendingOrders = [];
+        let pendingCombatTask = null;
+        let activeBuildTarget = null;
+
+        const proceduralNames = ["Thracian", "Acheron", "Cygnus", "Gallowglass", "Oros", "Typhon", "Kaurava", "Tartarus", "Vraks", "Armageddon", "Macragge", "Fenris"];
+        const proceduralSuffixes = ["Prime", "Secundus", "Hive", "Deep", "Reach", "Badlands", "Major", "Minor", "Sanctuary", "Forge"];
+        const proceduralTraits = [
+            { trait: "Solo Rochoso Rico: Fazendas neste planeta geram +25 Materiais.", traitType: "fertil" },
+            { trait: "Tempestades de Íons: Proíbe Laboratórios", traitType: "ion" },
+            { trait: "Mundo Abissal: Terreno Hostil", traitType: "normal" },
+            { trait: "Nexo de Telecomunicação: Laboratórios neste planeta geram +1 Pesq", traitType: "tech" }
+        ];
+
+        function getRandomFaction() {
+            const facs = ["neutral", "orks", "hereges", "necrons"];
+            return facs[Math.floor(Math.random() * facs.length)];
+        }
+
+        function switchQuartelTab(tabName) {
+            document.querySelectorAll('#quartel-modal .tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('#quartel-modal .tab-content').forEach(c => c.classList.remove('active'));
+            if (tabName === 'unidades') {
+                document.querySelectorAll('#quartel-modal .tab-btn')[0].classList.add('active');
+                document.getElementById('tab-unidades').classList.add('active');
+            } else {
+                document.querySelectorAll('#quartel-modal .tab-btn')[1].classList.add('active');
+                document.getElementById('tab-inimigos').classList.add('active');
+            }
+        }
+
+        function selectDoctrine(doc) {
+            if (doc === game.doutrinaAtiva) {
+                game.pendingDoctrine = null;
+                log(`📜 Doutrina mantida como: ${doc.toUpperCase()}`);
+            } else {
+                game.pendingDoctrine = doc;
+                log(`📜 Transição de Doutrina agendada para o fim do turno: ${doc.toUpperCase()}`);
+            }
+            updateDoctrineUI();
+            saveGame();
+        }
+
+        function updateDoctrineUI() {
+            document.querySelectorAll('.doctrine-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.style.borderColor = 'var(--border-color)';
+            });
+            let currentDoc = game.pendingDoctrine || game.doutrinaAtiva;
+            let activeBtn = document.getElementById(`doc-btn-${currentDoc}`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+                if (game.pendingDoctrine) activeBtn.style.borderColor = '#f59e0b';
+            }
+        }
+
+        function getProbeConfig() {
+            let hasProbeTech = game.techs.probes && (typeof game.techs.probes === 'object' ? game.techs.probes.level > 0 : game.techs.probes);
+            return { cost: hasProbeTech ? 100 : 125, maxTurns: hasProbeTech ? 4 : 5 };
+        }
+
+        function toggleProbe() {
+            if (planets.length >= 10) { alert("Limite máximo de 10 planetas atingido."); return; }
+            let probeCfg = getProbeConfig();
+            if (!game.probeActive) {
+                if (game.materials < probeCfg.cost) { alert(`Materiais insuficientes (${probeCfg.cost} Mat).`); return; }
+                game.materials -= probeCfg.cost;
+                game.probeActive = true;
+                game.probeConsecutiveTurns = 0;
+                log(`📡 Sonda lançada (Custo: ${probeCfg.cost} Mat).`);
+            } else {
+                game.probeActive = false;
+                log("📡 Sonda desativada.");
+            }
+            updateUI(); saveGame();
+        }
+
+        function saveGame() {
+            localStorage.setItem('warhammer_chapter_save_v123', JSON.stringify({ game, planets, activeOperations, currentReport, pendingOrders }));
+        }
+
+        function loadGame() {
+            const savedData = localStorage.getItem('warhammer_chapter_save_v123') || localStorage.getItem('warhammer_chapter_save_v122');
+            if (savedData) {
+                try {
+                    const parsed = JSON.parse(savedData);
+                    game = parsed.game;
+                    if (!game.doutrinaAtiva) game.doutrinaAtiva = 'nenhuma';
+                    planets = parsed.planets || [];
+                    activeOperations = parsed.activeOperations || [];
+                    currentReport = parsed.currentReport || currentReport;
+                    pendingOrders = parsed.pendingOrders || [];
+                    return true;
+                } catch(e) { console.error(e); }
+            }
+            return false;
+        }
+
+        function clearSave() {
+            if (confirm("Deseja apagar o progresso salvo?")) {
+                localStorage.removeItem('warhammer_chapter_save_v123');
+                localStorage.removeItem('warhammer_chapter_save_v122');
+                location.reload();
+            }
+        }
+
+        function clearSaveAndReload() { clearSave(); }
+        function log(msg) { currentReport.alerts.push(msg); }
+        function saveSnapshot() { turnSnapshot = JSON.stringify({ game, planets, activeOperations, currentReport, pendingOrders }); }
+
+        function resetTurnState() {
+            if (!turnSnapshot) { alert("Nenhum estado gravado."); return; }
+            let data = JSON.parse(turnSnapshot);
+            game = data.game; planets = data.planets; activeOperations = data.activeOperations;
+            currentReport = data.currentReport; pendingOrders = data.pendingOrders || [];
+            alert("🔄 Estado revertido.");
+            updateUI();
+        }
+
+        function toggleModal(modalId, show) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = show ? 'flex' : 'none';
+                if (modalId === 'report-modal' && show) renderReportModal();
+                if (modalId === 'quartel-modal' && show) updateDoctrineUI();
+                if (modalId === 'tech-modal' && show) renderTechModal();
+            }
+        }
+
+        function useRequisition(type) {
+            if (game.requisition < 1 && type !== 'exterminatus') { alert("Requisições insuficientes!"); return; }
+            if (game.requisitionsUsedThisTurn[type]) { alert("Requisição já utilizada neste turno."); return; }
+            if (type === 'rota' && game.activeTradeRoutes.length > 0) { alert("Já existe rota comercial ativa."); return; }
+
+            if (type === 'suprimentos') {
+                game.requisition--; game.materials += 250; game.requisitionsUsedThisTurn.suprimentos = true;
+                log("🏛️ Suprimentos de Terra: +250 Materiais.");
+            } else if (type === 'rota') {
+                game.requisition--; game.activeTradeRoutes.push({ turnsLeft: 10, amount: 50 }); game.requisitionsUsedThisTurn.rota = true;
+                log("🏛️ Rota comercial estabelecida (+50 Mat/turno).");
+            } else if (type === 'reforcos') {
+                if (getTotalTroopsSlots() + 1 > game.maxTroops) { alert("Limite de contingente excedido."); return; }
+                game.requisition--; game.units.fuzileiro.count++; game.requisitionsUsedThisTurn.reforcos = true;
+                log("🏛️ Reforço de Fuzileiro incorporado.");
+            }
+            updateTechUI(); updateUI(); saveGame();
+        }
+
+        function openExterminatusSelector() {
+            if (game.requisition < 10) { alert("Exige 10 Requisições."); return; }
+            toggleModal('req-modal', false);
+            const listContainer = document.getElementById('exterminatus-planet-list');
+            listContainer.innerHTML = '';
+            planets.filter(p => p.status === 'colonizado' || p.status === 'analisado').forEach(p => {
+                let btn = document.createElement('button');
+                btn.innerHTML = `🔥 Purificar: <strong>${p.name}</strong>`;
+                btn.style.background = '#8b0000'; btn.style.width = '100%'; btn.style.marginBottom = '4px';
+                btn.onclick = () => { queueExterminatus(p.id); };
+                listContainer.appendChild(btn);
+            });
+            toggleModal('exterminatus-modal', true);
+        }
+
+        function queueExterminatus(planetId) {
+            let p = planets.find(x => x.id === planetId);
+            game.requisition -= 10;
+            pendingOrders.push({ type: 'exterminatus', targetId: planetId });
+            log(`🔥 EXTERMINATUS agendado contra ${p.name}.`);
+            toggleModal('exterminatus-modal', false);
+            updateUI(); saveGame();
+        }
+
+        function renderTechModal() {
+            let natal = planets.find(p => p.id === 1);
+            let natalLevel = natal ? natal.expansionLevel : 1;
+            document.getElementById('tech-modal-res').innerText = game.research;
+
+            const rows = ['A', 'B', 'C'];
+            const cols = [1, 2, 3];
+
+            for (let axis in TECH_DEFINITIONS) {
+                let gridContainer = document.getElementById(`tech-grid-${axis}`);
+                if (!gridContainer) continue;
+                gridContainer.innerHTML = '';
+                let techMap = {};
+                TECH_DEFINITIONS[axis].forEach(t => { techMap[t.pos] = t; });
+                let prefix = (axis === 'militar') ? 'M' : (axis === 'produtivo' ? 'P' : 'G');
+
+                rows.forEach(r => {
+                    cols.forEach(c => {
+                        let posKey = prefix + r + c;
+                        let tech = techMap[posKey];
+                        if (!tech) {
+                            gridContainer.appendChild(document.createElement('div'));
+                        } else {
+                            let techState = game.techs[tech.id];
+                            let currentLevel = typeof techState === 'object' ? techState.level : (techState ? 1 : 0);
+                            let maxLevel = tech.maxLevel || 1;
+                            let isMaxed = currentLevel >= maxLevel;
+                            let dependsMet = true;
+                            if (tech.dependsOn) {
+                                let depState = game.techs[tech.dependsOn];
+                                if ((typeof depState === 'object' ? depState.level : depState) <= 0) dependsMet = false;
+                            }
+                            let isLocked = !dependsMet || (natalLevel < tech.reqFortress);
+
+                            let costText = "";
+                            if (tech.costRes > 0) costText += `🔬 ${tech.costRes} Pesquisa `;
+                            if (tech.costMat > 0) costText += `📦 ${tech.costMat} Materiais`;
+
+                            let nodeDiv = document.createElement('div');
+                            nodeDiv.className = `tech-node-small tooltip-container ${isMaxed ? 'unlocked' : (isLocked ? 'locked' : '')}`;
+                            nodeDiv.innerHTML = `
+                                ${maxLevel > 1 ? `<span class="tech-level-badge">${currentLevel}/${maxLevel}</span>` : ''}
+                                <div style="font-size: 1.3em;">${tech.emoji}</div>
+                                <div style="font-size: 0.72em; font-weight: bold;">${tech.name}</div>
+                                <div class="tooltip-box">
+                                    <strong>${tech.name}</strong><br>
+                                    <span style="color: var(--gold-bright); font-weight: bold;">Custo: ${costText}</span><br>
+                                    <em>Req. Nível ${tech.reqFortress} Mundo Natal</em><br>
+                                    <span style="display:block; margin-top:4px; font-size:0.9em; color:#cbd5e1;">${tech.desc}</span>
+                                </div>
+                            `;
+                            nodeDiv.onclick = () => { buyTech(tech.id); };
+                            gridContainer.appendChild(nodeDiv);
+                        }
+                    });
+                });
+            }
+        }
+
+        function buyTech(techId) {
+            let techDef = null;
+            for (let axis in TECH_DEFINITIONS) {
+                let found = TECH_DEFINITIONS[axis].find(t => t.id === techId);
+                if (found) { techDef = found; break; }
+            }
+            if (!techDef) return;
+            let natalLevel = (planets.find(p => p.id === 1) || {}).expansionLevel || 1;
+            if (natalLevel < techDef.reqFortress) { alert("Nível de Mundo Natal insuficiente."); return; }
+            
+            let techState = game.techs[techId];
+            let currentLevel = typeof techState === 'object' ? techState.level : (techState ? 1 : 0);
+            if (currentLevel >= (techDef.maxLevel || 1)) { alert("Tecnologia já maximizada."); return; }
+            if (game.research < techDef.costRes || game.materials < techDef.costMat) { alert("Recursos insuficientes."); return; }
+
+            game.research -= techDef.costRes; game.materials -= techDef.costMat;
+            if (typeof game.techs[techId] === 'object') game.techs[techId].level++;
+            else game.techs[techId] = { level: 1, max: techDef.maxLevel || 1 };
+
+            log(`🔬 Tecnologia avançada: ${techDef.name}`);
+            renderTechModal(); updateUI(); saveGame();
+        }
+
+        function updateTechUI() {
+            let termLevel = typeof game.techs.terminators === 'object' ? game.techs.terminators.level : game.techs.terminators;
+            let btnTerm = document.getElementById('btn-term');
+            if (btnTerm && termLevel > 0) { btnTerm.disabled = false; btnTerm.innerText = "Recrutar"; }
+
+            let dreadLevel = typeof game.techs.dreadnought === 'object' ? game.techs.dreadnought.level : game.techs.dreadnought;
+            let btnDread = document.getElementById('btn-dread');
+            if (btnDread && dreadLevel > 0) { btnDread.disabled = false; btnDread.innerText = "Recrutar"; }
+
+            ['suprimentos', 'rota', 'reforcos'].forEach(type => {
+                let btn = document.getElementById(`btn-req-${type}`);
+                if (btn) {
+                    btn.innerText = game.requisitionsUsedThisTurn[type] ? "Utilizado" : "Requisitar";
+                    btn.disabled = game.requisitionsUsedThisTurn[type];
+                }
+            });
+        }
+
+        function getTotalTroopsSlots() {
+            return game.units.fuzileiro.count + game.units.terminator.count + (game.units.dreadnought.count * 2);
+        }
+
+        function getActiveQuartelCount() {
+            let count = 0;
+            planets.forEach(p => { if (p.status === 'colonizado') p.slots.forEach(s => { if (s === 'quartel') count++; }); });
+            return count;
+        }
+
+        function updateUI() {
+            document.getElementById('header-turn').innerText = game.turn;
+            document.getElementById('header-tithe').innerText = 10 - ((game.turn - 1) % 10);
+            document.getElementById('res-req').innerText = game.requisition;
+            document.getElementById('modal-res-req').innerText = game.requisition;
+            document.getElementById('res-mat').innerText = game.materials;
+            document.getElementById('res-research').innerText = game.research;
+            document.getElementById('tech-modal-res').innerText = game.research;
+            document.getElementById('res-troops').innerText = getTotalTroopsSlots();
+            document.getElementById('res-max-troops').innerText = game.maxTroops;
+            document.getElementById('modal-res-troops').innerText = getTotalTroopsSlots();
+            document.getElementById('modal-res-max-troops').innerText = game.maxTroops;
+
+            let probeBtn = document.getElementById('btn-probe');
+            let probeBar = document.getElementById('probe-status-bar');
+            let probeCfg = getProbeConfig();
+            if (game.probeActive) {
+                probeBtn.innerText = "📡 Sonda Ativa";
+                probeBar.style.display = "block";
+                probeBar.innerHTML = `📡 Sonda em andamento (${game.probeConsecutiveTurns + 1}/${probeCfg.maxTurns}).`;
+            } else {
+                probeBtn.innerText = `📡 Enviar Sonda (${probeCfg.cost} Mat)`;
+                probeBar.style.display = "none";
+            }
+
+            document.getElementById('recruitment-limit-info').innerText = `Capacidade de Treino: ${game.fuzileirosTrainedThisTurn}/${getActiveQuartelCount() * 3} Fuzileiros.`;
+
+            renderRoster(); renderPlanets(); renderOperations(); updateTechUI(); updateDoctrineUI();
+        }
+
+        function renderRoster() {
+            const summaryBox = document.getElementById('roster-summary');
+            if (summaryBox) {
+                summaryBox.innerHTML = `
+                    <div>📜 Doutrina: <strong style="color:var(--gold-bright);">${game.doutrinaAtiva.toUpperCase()}</strong></div>
+                    <div>🔹 Fuzileiros: <strong>${game.units.fuzileiro.count}</strong></div>
+                    <div>🔸 Terminators: <strong>${game.units.terminator.count}</strong></div>
+                    <div>⚙️ Dreadnoughts: <strong>${game.units.dreadnought.count}</strong></div>
+                `;
+            }
+            const detailsBox = document.getElementById('quartel-roster-details');
+            if (detailsBox) {
+                detailsBox.innerHTML = `
+                    <div><strong>Ocupação:</strong> ${getTotalTroopsSlots()} / ${game.maxTroops}</div>
+                    <div>🔹 Fuzileiros: <strong>${game.units.fuzileiro.count}</strong></div>
+                    <div>🔸 Terminators: <strong>${game.units.terminator.count}</strong></div>
+                    <div>⚙️ Dreadnoughts: <strong>${game.units.dreadnought.count}</strong></div>
+                `;
+            }
+        }
+
+        function getDifficultyClass(threatName) {
+            if (threatName === 'Fácil') return 'diff-facil';
+            if (threatName === 'Médio') return 'diff-medio';
+            if (threatName === 'Difícil') return 'diff-dificil';
+            if (threatName === 'Muito Difícil') return 'diff-muito-dificil';
+            return '';
+        }
+
+        function renderPlanets() {
+            const container = document.getElementById('planets-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            planets.forEach(p => {
+                const div = document.createElement('div');
+                let isMobilized = p.mobilizedForces !== null;
+                div.className = `planet-management-card ${isMobilized ? 'mobilized' : ''}`;
+
+                if (p.raidStatus === "THREAT") div.classList.add('threat');
+                if (p.raidStatus === "ATTACK") div.classList.add('attack');
+
+                if (p.status === 'destruido') {
+                    div.innerHTML = `<div><strong>${p.name}</strong> <small style="color: #ef4444;">Exerivado</small></div>`;
+                } else if (p.status === 'colonizado') {
+                    let slotsHtml = '';
+                    p.slots.forEach((s, idx) => {
+                        let icon = '➕';
+                        if (s === 'fazenda') icon = '🌾';
+                        if (s === 'assentamento') icon = '🏕️';
+                        if (s === 'quartel') icon = '⚔️';
+                        if (s === 'laboratorio') icon = '🔬';
+                        if (s === 'ruins') {
+                            slotsHtml += `<div class="slot ruins" title="Destroços 🔥" onclick="clearRuins(${p.id}, ${idx})">🔥 25Mat</div>`;
+                            return;
+                        }
+                        if (s && s.startsWith('building_')) {
+                            slotsHtml += `<div class="slot building">⏳</div>`;
+                            return;
+                        }
+                        slotsHtml += `<div class="slot ${s !== 'vazio' ? 'filled' : ''}" onclick="openBuildMenu(${p.id}, ${idx})">${icon}</div>`;
+                    });
+
+                    let raidBadge = "";
+                    let raidAction = "";
+                    if (p.raidStatus === "THREAT") {
+                        raidBadge = `<span class="badge badge-threat">Ameaça Eminente (${p.threatTurns}T)</span>`;
+                        raidAction = `<button onclick="openCombatModal('planet_raid', ${p.id}, 'COUNTER')" style="background:#8b0000; padding:2px 6px; font-size:0.7em;">Contraofensiva</button>`;
+                    } else if (p.raidStatus === "ATTACK") {
+                        raidBadge = `<span class="badge badge-attack">Sob Ataque (${p.attackTurns}T)</span>`;
+                        raidAction = `<button onclick="openCombatModal('planet_raid', ${p.id}, 'DEFEND')" style="background:#8b0000; padding:2px 6px; font-size:0.7em;">Defender</button>`;
+                    }
+
+                    let expBtn = p.expansionLevel < p.maxExpansion ? `<button onclick="queueExpandPlanet(${p.id})" style="padding: 2px 6px; font-size: 0.7em;">⬆️ Expandir (${p.expansionLevel * 150} Mat)</button>` : `<small style="color: var(--gold);">Nv. Máx</small>`;
+
+                    div.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div><strong>${p.name}</strong> ${p.isHomeWorld ? '<span style="color:var(--gold);">(Capital)</span>' : ''} ${raidBadge}</div>
+                            <div style="display:flex; gap:6px; align-items:center;">${raidAction} ${expBtn}</div>
+                        </div>
+                        <div style="font-size: 0.7em; color: var(--gold); margin-top: 2px;">${p.trait}</div>
+                        <div class="slot-grid">${slotsHtml}</div>
+                    `;
+                } else if (p.status === 'colonizando') {
+                    div.innerHTML = `<div><strong>${p.name}</strong><br><small style="color: var(--gold-bright);">⏳ Colonizando...</small></div>`;
+                } else if (p.status === 'limpo') {
+                    div.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div><strong>${p.name}</strong><br><small style="color: #34d399;">Pronto para Colonizar</small></div>
+                            <button onclick="queueColonizePlanet(${p.id})">Colonizar (100 Mat)</button>
+                        </div>
+                    `;
+                } else if (p.status === 'analisado') {
+                    let facInfo = FACCOES_INIMIGAS[p.faction || 'orks'];
+                    div.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>${p.name}</strong><br>
+                                <span class="faction-badge ${facInfo.badgeClass}">Alvo: ${facInfo.nome}</span> <span class="${getDifficultyClass(p.threatName)}">[${p.threatName}]</span>
+                            </div>
+                            <button onclick="openCombatModal('planet', ${p.id})">Atacar / Limpar</button>
+                        </div>
+                    `;
+                }
+                container.appendChild(div);
+            });
+        }
+
+        function renderOperations() {
+            const container = document.getElementById('operations-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            activeOperations.forEach((op, index) => {
+                const div = document.createElement('div');
+                let isMobilized = op.mobilizedForces !== null;
+                div.className = `op-card ${isMobilized ? 'mobilized' : ''}`;
+                let facInfo = FACCOES_INIMIGAS[op.faction || 'orks'];
+
+                let content = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <strong>${op.title}</strong>
+                        <span class="${getDifficultyClass(op.diffName)}">[${op.diffName}]</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
+                        <span class="faction-badge ${facInfo.badgeClass}">${facInfo.nome}</span>
+                        <span style="font-size:0.8em; color:var(--gold-bright);">📦 +${op.rewardMat} Mat ${op.rewardResearch > 0 ? `| 🔬 +${op.rewardResearch} Pesq` : ''}</span>
+                    </div>
+                `;
+
+                if (isMobilized) {
+                    let f = op.mobilizedForces;
+                    content += `
+                        <div style="background: #111827; padding: 4px 6px; border-radius: 3px; font-size: 0.85em; color: var(--gold-bright); border: 1px solid var(--gold); margin-top: 4px;">
+                            📍 <strong>Mobilizados:</strong> ${f.fuz > 0 ? `🔹${f.fuz} Fuz` : ''} ${f.term > 0 ? `🔸${f.term} Term` : ''} ${f.dread > 0 ? `⚙️${f.dread} Dread` : ''}
+                        </div>
+                        <button onclick="cancelOperationMobilization(${index})" style="background: linear-gradient(180deg, #991b1b 0%, #7f1d1d 100%); border-color: #ef4444; width: 100%; text-align: center; margin-top: 4px;">↩️ Cancelar Operação (Devolver Tropas)</button>
+                    `;
+                } else {
+                    content += `<button onclick="openCombatModal('operation', ${index})" style="margin-top: 4px; width: 100%;">Escalar Operação</button>`;
+                }
+
+                div.innerHTML = content;
+                container.appendChild(div);
+            });
+        }
+
+        function cancelOperationMobilization(opIndex) {
+            let op = activeOperations[opIndex];
+            if (!op || !op.mobilizedForces) return;
+
+            let f = op.mobilizedForces;
+            game.units.fuzileiro.count += f.fuz;
+            game.units.terminator.count += f.term;
+            game.units.dreadnought.count += f.dread;
+
+            pendingOrders = pendingOrders.filter(o => !(o.type === 'combat' && o.task.type === 'operation' && o.task.targetId === opIndex));
+
+            op.mobilizedForces = null;
+            log(`↩️ Operação "${op.title}" cancelada. Tropas estornadas ao Quartel.`);
+            updateUI(); saveGame();
+        }
+		
+		function newopgeneration() {
+    		// LISTA DE OPERAÇÕES PRE-MONTADAS
+    		const especialop = [
+        	{
+            title: "Recuperar Relíquia Antiga",
+            faction: "necrons",
+            diff: 2,
+            diffName: "Médio",
+            rewardMat: 100,
+            rewardResearch: 1,
+            rewardRequisition: false
+        	},
+        	{
+            title: "Exterminar Cultos Hereges",
+            faction: "hereges",
+            diff: 3,
+            diffName: "Difícil",
+            rewardMat: 150,
+            rewardResearch: 0,
+            rewardRequisition: true
+        	}
+    		];
+			
+			// CHANCE DE PROCEDURAL X PRE-MONTADA
+			if (Math.random() < 0.30 && especialop.length > 0) {
+        		let especialSalada = especialop[Math.floor(Math.random() * especialop.length)];
+        		return {
+            	id: Date.now() + Math.floor(Math.random() * 1000),
+            	title: especialSalada.title,
+            	faction: especialSalada.faction,
+            	diff: especialSalada.diff,
+            	diffName: especialSalada.diffName,
+            	rewardMat: especialSalada.rewardMat,
+            	rewardResearch: especialSalada.rewardResearch,
+            	rewardRequisition: especialSalada.rewardRequisition || false,
+            	mobilizedForces: null
+        	};
+    }
+
+    		// OPERAÇÕES PROCEDURAIS
+    		const titulosProcedurais = [
+        		"Incursão na Franja do Setor",
+        		"Sabotagem de Posto Avançado",
+        		"Retomada de Depósito de Suprimentos",
+        		"Emboscada a Comboio Hostil",
+        		"Eliminação de Célula Infiltrada"
+   	 			];
+    
+    		const tituloAleatorio = titulosProcedurais[Math.floor(Math.random() * titulosProcedurais.length)];
+    		let faccaoSorteada = getRandomFaction();
+    
+    		// Operações contra Mercenários NÃO devem passar da dificuldade Médio (2)
+			let maxDiff = game.turn > 10 ? 4 : 3;
+    		let diffSorteada = Math.floor(Math.random() * maxDiff) + 1;
+    
+    		if (faccaoSorteada === "neutral" && diffSorteada > 2) {
+        	diffSorteada = Math.floor(Math.random() * 2) + 1; // Força a ser 1 (Fácil) ou 2 (Médio)
+    		}
+    
+			// Recompensas Procedurais
+    		let nomeDiff = "Fácil";
+    		let matReward = 75;
+    		let resReward = 0;
+    		if (diffSorteada === 2) {
+        		nomeDiff = "Médio";
+        		matReward = 125;
+    		} else if (diffSorteada === 3) {
+        		nomeDiff = "Difícil";
+        		matReward = 200;
+        		resReward = 1;
+    		} else if (diffSorteada === 4) {
+        		nomeDiff = "Muito Difícil";
+        		matReward = 300;
+        		resReward = 2;
+    		}
+
+    		// Requisição Adicional
+    		let ganhaReq = Math.random() < 0.20;
+
+    		return {
+        		id: Date.now() + Math.floor(Math.random() * 1000),
+        		title: tituloAleatorio,
+        		faction: faccaoSorteada,
+        		diff: diffSorteada,
+        		diffName: nomeDiff,
+        		rewardMat: matReward,
+				rewardResearch: resReward,
+        		rewardRequisition: ganhaReq,
+        		mobilizedForces: null
+    		};
+		}
+		
+        function queueColonizePlanet(id) {
+            let p = planets.find(x => x.id === id);
+            if (game.materials < 100) { alert("Materiais insuficientes."); return; }
+            game.materials -= 100;
+            p.status = 'colonizando';
+            pendingOrders.push({ type: 'colonize', targetId: id });
+            log(`🏗️ Colonizando ${p.name}.`);
+            updateUI(); saveGame();
+        }
+
+        function queueExpandPlanet(id) {
+            let p = planets.find(x => x.id === id);
+            let cost = p.expansionLevel * 150;
+            if (game.materials < cost) { alert("Materiais insuficientes."); return; }
+            game.materials -= cost;
+            pendingOrders.push({ type: 'expand', targetId: id });
+            log(`⬆️ Expansão agendada para ${p.name}.`);
+            updateUI(); saveGame();
+        }
+
+        function openBuildMenu(planetId, slotIdx) {
+            let p = planets.find(x => x.id === planetId);
+            if (p.slots[slotIdx] === 'ruins') { clearRuins(planetId, slotIdx); return; }
+            
+            activeBuildTarget = { planetId, slotIdx };
+            document.getElementById('build-modal-subtitle').innerText = `Selecione a estrutura a ser erguida no planeta ${p.name}:`;
+            toggleModal('build-modal', true);
+        }
+
+        function confirmBuild(type, cost) {
+            if (!activeBuildTarget) return;
+            let p = planets.find(x => x.id === activeBuildTarget.planetId);
+            if (!p) return;
+
+            if (game.materials >= cost) {
+                game.materials -= cost;
+                p.slots[activeBuildTarget.slotIdx] = `building_${type}`;
+                log(`🔨 Construção de ${type.toUpperCase()} agendada em ${p.name}.`);
+                toggleModal('build-modal', false);
+                activeBuildTarget = null;
+                updateUI(); saveGame();
+            } else {
+                alert("Materiais insuficientes.");
+            }
+        }
+
+        function clearRuins(planetId, slotIdx) {
+            if (game.materials < 25) { alert("Necessário 25 Materiais para limpar os Destroços (🔥)."); return; }
+            let p = planets.find(x => x.id === planetId);
+            if (p && p.slots[slotIdx] === 'ruins') {
+                game.materials -= 25;
+                p.slots[slotIdx] = 'vazio';
+                log(`🔥 Destroços limpos no planeta ${p.name}. Slot liberado.`);
+                updateUI(); saveGame();
+            }
+        }
+
+        function openCombatModal(type, targetId, raidAction = null) {
+            pendingCombatTask = { type, targetId, raidAction };
+            document.getElementById('disp-fuz').innerText = game.units.fuzileiro.count;
+            document.getElementById('disp-term').innerText = game.units.terminator.count;
+            document.getElementById('disp-dread').innerText = game.units.dreadnought.count;
+            document.getElementById('input-fuz').value = 0;
+            document.getElementById('input-term').value = 0;
+            document.getElementById('input-dread').value = 0;
+
+            let title = "Combate", targetName = "";
+            if (type === 'planet') targetName = planets.find(x => x.id === targetId).name;
+            else if (type === 'operation') targetName = activeOperations[targetId].title;
+            else if (type === 'planet_raid') targetName = `Raid em ${planets.find(x => x.id === targetId).name} (${raidAction})`;
+
+            document.getElementById('combat-modal-title').innerText = `⚔️ ${targetName}`;
+            toggleModal('combat-modal', true);
+        }
+
+        function confirmAndQueueCombat() {
+            let fuz = parseInt(document.getElementById('input-fuz').value) || 0;
+            let term = parseInt(document.getElementById('input-term').value) || 0;
+            let dread = parseInt(document.getElementById('input-dread').value) || 0;
+
+            if (fuz <= 0 && term <= 0 && dread <= 0) { alert("Selecione ao menos uma unidade."); return; }
+            if (fuz > game.units.fuzileiro.count || term > game.units.terminator.count || dread > game.units.dreadnought.count) {
+                alert("Tropas insuficientes."); return;
+            }
+
+            toggleModal('combat-modal', false);
+            game.units.fuzileiro.count -= fuz;
+            game.units.terminator.count -= term;
+            game.units.dreadnought.count -= dread;
+
+            if (pendingCombatTask.type === 'operation') {
+                activeOperations[pendingCombatTask.targetId].mobilizedForces = { fuz, term, dread };
+            }
+
+            pendingOrders.push({ type: 'combat', task: pendingCombatTask, forces: { fuz, term, dread } });
+            log(`⚔️ Tropas alocadas para combate.`);
+            updateUI(); saveGame();
+        }
+
+        /* SIMULAÇÃO DE COMBATE DETALHADA COM LOG DE RODADAS */
+        function resolveCombatSimulation(fuz, term, dread, threatLevel, targetTitle, facKey, isHomeWorld = false, raidAction = null) {
+            let activeFuz = fuz, activeTerm = term, activeDread = dread;
+            let success = false;
+            let combatLogLines = [];
+            let facInfo = FACCOES_INIMIGAS[facKey || 'orks'];
+            let waaghActivated = false;
+
+            combatLogLines.push(`Início do engajamento tático contra <strong>${facInfo.nome}</strong> em: <strong>${targetTitle}</strong>.`);
+            combatLogLines.push(`Força destacada: ${fuz} Fuzileiros, ${term} Terminators, ${dread} Dreadnoughts.`);
+            combatLogLines.push(`Doutrina Ativa: <strong>${game.doutrinaAtiva.toUpperCase()}</strong>.`);
+
+            for (let round = 1; round <= 5; round++) {
+                combatLogLines.push(`<br>--- Rodada ${round} ---`);
+                let totalPower = (activeFuz * 5) + (activeTerm * 12) + (activeDread * 20);
+                if (game.doutrinaAtiva === 'devastacao') totalPower = Math.ceil(totalPower * 1.10);
+
+                if (isHomeWorld || raidAction) {
+                    totalPower += 5;
+                    combatLogLines.push(`🛡️ Bônus de Defesa Planetária (+5 Poder total).`);
+                }
+
+                if (Math.random() < (totalPower * 0.05)) {
+                    success = true;
+                    combatLogLines.push(`🎯 <strong>Vitória Absoluta!</strong> As forças do Capítulo superaram as defesas inimigas.`);
+                    break;
+                } else {
+                    let killChance = 0.20;
+                    if (facKey === 'hereges') {
+                        killChance += 0.02;
+                        combatLogLines.push(`⚡ <em>Morte ao Falso Imperador!</em> Letalidade herética aumentada (+2%).`);
+                    }
+
+                    let dakkaChance = 0.10;
+                    if (facKey === 'orks' && round >= 2 && !waaghActivated) {
+                        if (Math.random() < 0.10) {
+                            waaghActivated = true;
+                            killChance += 0.05;
+                            dakkaChance = 0.20;
+                            combatLogLines.push(`🔥 <strong>WAAAGH!!!</strong> Os Orks investem com fúria cega (+5% fatalidade, DAKKA dobrado).`);
+                        }
+                    }
+
+                    if (Math.random() < killChance) {
+                        let casualtyResisted = false;
+
+                        if (facKey === 'orks' && Math.random() < dakkaChance) {
+                            combatLogLines.push(`💥 <em>DAKKA! DAKKA! DAKKA!</em> Teste de resistência forçado.`);
+                            if (Math.random() > 0.5) casualtyResisted = true;
+                        }
+
+                        if (!casualtyResisted) {
+                            if (activeFuz > 0) { activeFuz--; combatLogLines.push(`💀 Baixa: 1 Fuzileiro Espacial abatido.`); }
+                            else if (activeTerm > 0) { activeTerm--; combatLogLines.push(`💀 Baixa: 1 Terminator tombou em combate.`); }
+                            else if (activeDread > 0) { activeDread--; combatLogLines.push(`💀 Baixa: 1 Dreadnought foi desativado.`); }
+                        } else {
+                            combatLogLines.push(`🛡️ O esquadrão resistiu ao volume de fogo inimigo sem baixas.`);
+                        }
+                    } else {
+                        combatLogLines.push(`🔄 Troca de disparos efetuada sem baixas nesta rodada.`);
+                    }
+                }
+                if (activeFuz + activeTerm + activeDread === 0) {
+                    combatLogLines.push(`❌ <strong>Derrota Total.</strong> Todas as unidades em campo foram aniquiladas.`);
+                    break;
+                }
+            }
+            return { success, survivors: { fuz: activeFuz, term: activeTerm, dread: activeDread }, logLines: combatLogLines };
+        }
+
+        function openCombatLogModal(logIndex) {
+            let logData = currentReport.combatLogs[logIndex];
+            if (!logData) return;
+            document.getElementById('combat-log-title').innerHTML = `⚔️ DIÁRIO TÁTICO: ${logData.title} [<strong>${logData.result}</strong>]`;
+            document.getElementById('combat-log-body').innerHTML = logData.lines.join('<br>');
+            toggleModal('combat-log-modal', true);
+        }
+
+        function recruitUnit(type) {
+            let costMat = type === 'fuzileiro' ? 50 : (type === 'terminator' ? 125 : 400);
+            if (game.materials >= costMat) {
+                game.materials -= costMat;
+                pendingOrders.push({ type: 'recruit', unitType: type });
+                log(`⚔️ Treinamento de ${type} enfileirado.`);
+                updateUI(); saveGame();
+            } else { alert("Materiais insuficientes."); }
+        }
+
+        /* TRIGGERS DE FIM DE TURNO */
+        function nextTurn() {
+            if (game.pendingDoctrine) {
+                game.doutrinaAtiva = game.pendingDoctrine;
+                game.pendingDoctrine = null;
+            }
+
+            game.turn++;
+            game.fuzileirosTrainedThisTurn = 0;
+            game.requisitionsUsedThisTurn = { suprimentos: false, rota: false, reforcos: false };
+
+            currentReport = {
+                turnNum: game.turn,
+                resources: { matProduced: 0, resProduced: 0, maintenance: 0, tradeIncome: 0, opIncome: 0, finalMat: 0 },
+                planetEvents: [], operations: [], combatLogs: [], alerts: []
+            };
+
+            let totalOpIncomeThisTurn = 0;
+
+            // 1. Processar Ações do Jogador //
+            if (pendingOrders.length > 0) {
+                pendingOrders.forEach(order => {
+                    if (order.type === 'recruit') {
+                        game.units[order.unitType].count++;
+                        currentReport.alerts.push(`Treinamento de ${order.unitType} concluído.`);
+                    } else if (order.type === 'exterminatus') {
+                        let p = planets.find(x => x.id === order.targetId);
+                        if (p) { p.status = 'destruido'; p.slots = []; }
+                    } else if (order.type === 'colonize') {
+                        let p = planets.find(x => x.id === order.targetId);
+                        if (p) { p.status = 'colonizado'; p.slots = ['vazio', 'vazio']; game.requisition += 2; }
+                    } else if (order.type === 'expand') {
+                        let p = planets.find(x => x.id === order.targetId);
+                        if (p && p.expansionLevel < p.maxExpansion) { p.expansionLevel++; p.slots.push('vazio'); }
+                    } else if (order.type === 'combat') {
+                        let task = order.task; let forces = order.forces;
+                        let targetTitle = "", facKey = 'orks', success = false, survivors = forces, logLines = [];
+
+                        if (task.type === 'planet_raid') {
+                            let p = planets.find(x => x.id === task.targetId);
+                            facKey = p.faction || 'hereges';
+                            targetTitle = `Raid em ${p.name}`;
+                            let res = resolveCombatSimulation(forces.fuz, forces.term, forces.dread, 2, targetTitle, facKey, p.isHomeWorld, task.raidAction);
+                            success = res.success; survivors = res.survivors; logLines = res.logLines;
+                            if (success) {
+                                p.raidStatus = "SAFE";
+                                p.threatTurns = 0; p.attackTurns = 0;
+                                currentReport.planetEvents.push(`Raid repelida com sucesso em ${p.name}!`);
+                            }
+                        } else if (task.type === 'planet') {
+                            let p = planets.find(x => x.id === task.targetId);
+                            facKey = p.faction || 'orks';
+                            targetTitle = p.name;
+                            let res = resolveCombatSimulation(forces.fuz, forces.term, forces.dread, p.threatLevel, targetTitle, facKey, p.isHomeWorld);
+                            success = res.success; survivors = res.survivors; logLines = res.logLines;
+                            if (success) { p.status = 'limpo'; }
+                        } else if (task.type === 'operation') {
+							let opIndex = task.targetId;
+                            let op = activeOperations[task.targetId];
+                            facKey = op.faction || 'orks';
+                            targetTitle = op.title;
+                            let res = resolveCombatSimulation(forces.fuz, forces.term, forces.dread, op.diff, targetTitle, facKey);
+                            success = res.success; survivors = res.survivors; logLines = res.logLines;
+							
+                            if (success) {
+							totalOpIncomeThisTurn += op.rewardMat;
+								game.materials += op.rewardMat;
+        						currentReport.operations.push(`Operação "${op.title}" bem sucedida (+${op.rewardMat} Mat).`);
+								
+								// REQUISIÇÃO EXTRA //
+								let reqTextoExtra = "";
+    							if (op.rewardRequisition) {
+        						game.requisition += 1;
+        						reqTextoExtra = " | 📜 +1 Requisição";
+    							}
+        
+        						// NOVA OPERAÇÃO GERADA ALEATORIAMENTE //
+        						let novaOp = newopgeneration();
+        						activeOperations[opIndex] = novaOp;
+        						currentReport.alerts.push(`Nova operação disponível: "${novaOp.title}" (${FACCOES_INIMIGAS[novaOp.faction].nome}).`);
+														
+                            	} else {
+                                op.mobilizedForces = null;
+                                currentReport.operations.push(`Operação "${op.title}" falhou em cumprir os objetivos.`);
+                            	}
+                        }
+
+                        game.units.fuzileiro.count += survivors.fuz;
+                        game.units.terminator.count += survivors.term;
+                        game.units.dreadnought.count += survivors.dread;
+
+                        // Registrar Log de Combate para o Relatório
+                        currentReport.combatLogs.push({
+                            title: targetTitle,
+                            result: success ? "VITÓRIA" : "DERROTA",
+                            lines: logLines
+                        });
+                    }
+                });
+                pendingOrders = [];
+            }
+
+            // 2. Geração de Recursos
+            let totalMatProduced = 0;
+            let totalResProduced = 0;
+            let farmBoostLevel = (typeof game.techs.farmboost === 'object') ? game.techs.farmboost.level : 0;
+
+            planets.forEach(p => {
+                if (p.status === 'colonizado') {
+                    p.slots.forEach(s => {
+                        if (s === 'fazenda') totalMatProduced += 25 + (farmBoostLevel * 25);
+                        if (s === 'laboratorio') totalResProduced += 1;
+                    });
+                }
+            });
+
+            let totalTradeIncome = 0;
+            if (game.activeTradeRoutes.length > 0) {
+                game.activeTradeRoutes.forEach(r => { totalTradeIncome += r.amount; r.turnsLeft--; });
+                game.activeTradeRoutes = game.activeTradeRoutes.filter(r => r.turnsLeft > 0);
+            }
+
+            let hasLogisticsTech = (typeof game.techs.logistics === 'object' && game.techs.logistics.level > 0);
+            let baseMaintenance = hasLogisticsTech ? 50 : 100;
+            let maintenance = baseMaintenance + (planets.filter(p => p.status === 'colonizado' && !p.isHomeWorld).length * 50);
+
+            game.materials += totalMatProduced + totalTradeIncome - maintenance;
+            game.research += totalResProduced;
+
+            currentReport.resources = {
+                matProduced: totalMatProduced,
+                resProduced: totalResProduced,
+                tradeIncome: totalTradeIncome,
+                opIncome: totalOpIncomeThisTurn,
+                maintenance: maintenance,
+                finalMat: game.materials
+            };
+
+            // 3. Conclusão de Construções
+            planets.forEach(p => {
+                if (p.status === 'colonizado') {
+                    for (let i = 0; i < p.slots.length; i++) {
+                        let s = p.slots[i];
+                        if (s && s.startsWith('building_')) {
+                            let realType = s.replace('building_', '');
+                            p.slots[i] = realType;
+                            if (realType === 'assentamento') game.maxTroops++;
+                            currentReport.planetEvents.push(`Construção de '${realType.toUpperCase()}' finalizada em ${p.name}.`);
+                        }
+                    }
+                }
+            });
+
+            // 4. Raids e Ameaças
+            planets.forEach(p => {
+                if (p.status !== 'colonizado') return;
+
+                if (p.raidStatus === "THREAT") {
+                    p.threatTurns++;
+                    let chanceToAttack = p.threatTurns >= 5 ? 1.0 : 0.25;
+                    if (Math.random() < chanceToAttack) {
+                        p.raidStatus = "ATTACK";
+                        p.threatTurns = 0; p.attackTurns = 1;
+                        currentReport.planetEvents.push(`⚠️ A Ameaça Eminente em ${p.name} se transformou em SOB ATAQUE!`);
+                    }
+                } else if (p.raidStatus === "ATTACK") {
+                    p.attackTurns++;
+
+                    let activeFaction = p.faction || 'hereges';
+                    let destroyChance = (activeFaction === 'hereges') ? 0.20 : 0.10;
+                    let maxDestroySlots = (activeFaction === 'hereges') ? 3 : 2;
+                    let destroyedCount = 0;
+
+                    p.slots.forEach((s, idx) => {
+                        if (s !== 'vazio' && s !== 'ruins' && !s.startsWith('building_') && destroyedCount < maxDestroySlots) {
+                            if (Math.random() < destroyChance) {
+                                p.slots[idx] = 'ruins';
+                                destroyedCount++;
+                            }
+                        }
+                    });
+
+                    if (destroyedCount > 0) {
+                        currentReport.planetEvents.push(`🔥 ${destroyedCount} slot(s) em ${p.name} foram reduzidos a Destroços devido aos ataques!`);
+                    }
+
+                    let allRuins = p.slots.every(s => s === 'ruins');
+                    if (p.attackTurns >= 5 || allRuins) {
+                        if (p.isHomeWorld) {
+                            toggleModal('gameover-modal', true); return;
+                        } else {
+                            currentReport.planetEvents.push(`💀 O planeta ${p.name} foi perdido e abandonado após cerco prolongado!`);
+                            p.status = 'destruido'; p.slots = [];
+                        }
+                    }
+                }
+            });
+
+            if (game.turn >= 5) {
+                let totalRaidsActive = planets.filter(p => p.raidStatus !== "SAFE").length;
+                let newRaidsThisTurn = 0;
+
+                planets.forEach(p => {
+                    if (p.status === 'colonizado' && p.raidStatus === "SAFE" && totalRaidsActive < 5 && newRaidsThisTurn < 3) {
+                        if (p.isHomeWorld && game.turn < 10) return;
+                        let chance = p.isHomeWorld ? 0.025 : 0.05;
+
+                        if (Math.random() < chance) {
+                            newRaidsThisTurn++; totalRaidsActive++;
+                            p.faction = getRandomFaction();
+                            
+                            if (Math.random() < 0.25) {
+                                p.raidStatus = "THREAT"; p.threatTurns = 1;
+                                currentReport.planetEvents.push(`📡 Ameaça Eminente detectada no mundo ${p.name}!`);
+                            } else {
+                                p.raidStatus = "ATTACK"; p.attackTurns = 1;
+                                currentReport.planetEvents.push(`🚨 ALERTA: O mundo ${p.name} foi tomado de surpresa e está SOB ATAQUE!`);
+                            }
+                        }
+                    }
+                });
+            }
+
+            if ((game.turn - 1) % 10 === 0 && game.turn > 1) {
+                game.materials -= 1000;
+                currentReport.alerts.push(`👑 Dízimo Imperial cobrado (-1000 Mat).`);
+            }
+
+            if (game.materials < 0) {
+                game.negativeTurnsCount++;
+                if (game.negativeTurnsCount >= 5) { toggleModal('gameover-modal', true); return; }
+            } else { game.negativeTurnsCount = 0; }
+
+            updateUI(); saveSnapshot(); saveGame();
+            toggleModal('report-modal', true);
+        }
+
+        /* RELATÓRIO DO TURNO COM COMBATES E BALANÇO COMPLETO */
+        function renderReportModal() {
+            const body = document.getElementById('report-modal-body');
+            if (!body) return;
+            let r = currentReport.resources || {};
+
+            let combatHtml = '';
+            if (currentReport.combatLogs && currentReport.combatLogs.length > 0) {
+                currentReport.combatLogs.forEach((cl, index) => {
+                    combatHtml += `<button class="combat-log-btn" onclick="openCombatLogModal(${index})">🔍 Diário Tático: ${cl.title} [<strong>${cl.result}</strong>]</button>`;
+                });
+            } else {
+                combatHtml = '<div style="font-size:0.8em; color:#9ca3af;">Nenhum combate travado neste ciclo.</div>';
+            }
+
+            body.innerHTML = `
+                <div class="report-section">
+                    <h4>📦 Balanço Financeiro e Recursos (Ciclo ${currentReport.turnNum})</h4>
+                    <div style="font-size: 0.85em; display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                        <div>🌾 Produção de Fazendas: <strong style="color:#34d399;">+${r.matProduced || 0} Mat</strong></div>
+                        <div>📜 Rotas Comerciais: <strong style="color:#34d399;">+${r.tradeIncome || 0} Mat</strong></div>
+                        <div>⚔️ Operações Militares: <strong style="color:#34d399;">+${r.opIncome || 0} Mat</strong></div>
+                        <div>⚙️ Manutenção de Domínios: <strong style="color:#f87171;">-${r.maintenance || 0} Mat</strong></div>
+                        <div>🔬 Pesquisa Gerada: <strong style="color:#60a5fa;">+${r.resProduced || 0} Pesq</strong></div>
+                    </div>
+                    <div style="border-top: 1px dashed var(--border-color); margin-top: 6px; padding-top: 4px; font-size: 0.88em; color: var(--gold-bright);">
+                        💰 Saldo Final de Materiais: <strong>${r.finalMat || game.materials} Mat</strong>
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h4>⚔️ Diários Táticos de Combate</h4>
+                    ${combatHtml}
+                </div>
+
+                <div class="report-section">
+                    <h4>🪐 Eventos Planetários e Raids</h4>
+                    ${currentReport.planetEvents.length > 0 ? currentReport.planetEvents.map(e => `<div style="font-size:0.8em; margin-bottom:2px;">• ${e}</div>`).join('') : '<div style="font-size:0.8em;">Nenhum evento crítico neste ciclo.</div>'}
+                </div>
+
+                <div class="report-section">
+                    <h4>📡 Alertas e Resoluções do Capítulo</h4>
+                    ${currentReport.alerts.length > 0 ? currentReport.alerts.map(a => `<div style="font-size:0.8em; margin-bottom:2px;">> ${a}</div>`).join('') : '<div style="font-size:0.8em;">Tudo calmo no setor.</div>'}
+                </div>
+            `;
+        }
+
+        window.onload = function() {
+            let loaded = loadGame();
+            if (loaded) { log("📂 Save carregado."); } else { saveSnapshot(); }
+            updateUI();
+        };
+    </script>
+</body>
+</html>
