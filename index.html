@@ -1871,6 +1871,48 @@
 
             updateUI(); saveSnapshot(); saveGame();
             toggleModal('report-modal', true);
+			
+			// PROCESSO DE VARREDURA DA SONDA
+			let probeCfg = getProbeConfig();
+				if (game.probeActive) {
+					game.probeConsecutiveTurns++;    
+    		// Define a chance com base na tecnologia (25% com Tech, 20% sem Tech)
+    		let hasProbeTech = game.techs.probes && (typeof game.techs.probes === 'object' ? game.techs.probes.level > 0 : game.techs.probes);
+    		let chanceEncontrar = hasProbeTech ? 0.25 : 0.20;
+    
+    		// Rola um número aleatório entre 0 e 1 para testar a sorte da sonda neste turno
+    		let achouPorSorte = Math.random() < chanceEncontrar;
+    
+    		// Se atingiu o limite máximo de turnos (4 ou 5) OU deu sorte no RNG da varredura
+    		if (game.probeConsecutiveTurns >= probeCfg.maxTurns || achouPorSorte) {
+        		game.probeActive = false;
+        		game.probeConsecutiveTurns = 0;
+        
+        	// Cria um novo planeta procedural para o império
+			let nomePlaneta = proceduralNames[Math.floor(Math.random() * proceduralNames.length)] + " " + proceduralSuffixes[Math.floor(Math.random() * proceduralSuffixes.length)];
+        	let traitObj = proceduralTraits[Math.floor(Math.random() * proceduralTraits.length)];
+        
+        	planets.push({
+            	id: planets.length + 1,
+            	name: nomePlaneta,
+            	status: "limpo",
+            	isHomeWorld: false,
+            	raidStatus: "SAFE",
+            	threatTurns: 0,
+            	attackTurns: 0,
+            	expansionLevel: 1,
+            	maxExpansion: 3,
+            	trait: traitObj.trait,
+            	traitType: traitObj.traitType,
+            	slots: ['vazio', 'vazio'],
+            	mobilizedForces: null
+        	});
+        
+        	currentReport.alerts.push(`✨ Sonda concluiu a varredura com sucesso! Novo mundo descoberto: <strong>${nomePlaneta}</strong>.`);
+    			} else {
+        		currentReport.alerts.push(`📡 Sonda em progresso (${game.probeConsecutiveTurns}/${probeCfg.maxTurns} - Varredura em andamento...).`);
+    			}	
+			}
         }
 
         /* RELATÓRIO DO TURNO COM COMBATES E BALANÇO COMPLETO */
