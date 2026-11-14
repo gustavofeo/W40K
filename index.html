@@ -1048,6 +1048,11 @@
             }
             updateTechUI(); updateUI(); saveGame();
         }
+		
+		// CALCULA AS UNIDADES DISPONÍVEIS
+		function getAvailableTroopsSlots() { 
+    		return game.units.fuzileiro.count + game.units.terminator.count + (game.units.dreadnought.count * 2);
+		}
 
         function openExterminatusSelector() {
             if (game.requisition < 10) { alert("Exige 10 Requisições."); return; }
@@ -1188,16 +1193,16 @@
     		});
 
     		// SOMA AS UNIDADES EM TREINAMENTO
-    		if (game.trainingQueue && Array.isArray(game.trainingQueue)) {
-        	game.trainingQueue.forEach(item => {
-            if (item.unit === 'fuzileiro') fuzCount += item.amount || 1;
-            if (item.unit === 'terminator') termCount += item.amount || 1;
-            if (item.unit === 'dreadnought') dreadCount += item.amount || 1;
-        	});
-    	}
-
+    		pendingOrders.forEach(order => {
+    		if (order.type === 'recruit') {
+        	if (order.unitType === 'fuzileiro') fuzCount += 1;
+        	if (order.unitType === 'terminator') termCount += 1;
+        	if (order.unitType === 'dreadnought') dreadCount += 1;
+    		}
+			});
+    	
     return fuzCount + termCount + (dreadCount * 2);
-}
+		}
 
         function updateUI() {
             document.getElementById('header-turn').innerText = game.turn;
@@ -1207,7 +1212,7 @@
             document.getElementById('res-mat').innerText = game.materials;
             document.getElementById('res-research').innerText = game.research;
             document.getElementById('tech-modal-res').innerText = game.research;
-            document.getElementById('res-troops').innerText = getTotalTroopsSlots();
+            document.getElementById('res-troops').innerText = getAvailableTroopsSlots();
             document.getElementById('res-max-troops').innerText = game.maxTroops;
             document.getElementById('modal-res-troops').innerText = getTotalTroopsSlots();
             document.getElementById('modal-res-max-troops').innerText = game.maxTroops;
@@ -1705,14 +1710,29 @@
         }
 
         function recruitUnit(type) {
-            let costMat = type === 'fuzileiro' ? 50 : (type === 'terminator' ? 125 : 400);
-            if (game.materials >= costMat) {
-                game.materials -= costMat;
-                pendingOrders.push({ type: 'recruit', unitType: type });
-                log(`⚔️ Treinamento de ${type} enfileirado.`);
-                updateUI(); saveGame();
-            } else { alert("Materiais insuficientes."); }
-        }
+    		let slotsNeeded = (type === 'dreadnought') ? 2 : 1;
+    		if (getTotalTroopsSlots() + slotsNeeded > game.maxTroops) {
+        	alert("Limite de contingente do Capítulo atingido!");
+        	return;
+    		}
+
+    		if (type === 'fuzileiro') {
+        	let maxTrain = getActiveQuartelCount() * 3;
+        	if (game.fuzileirosTrainedThisTurn >= maxTrain) {
+            alert(`Limite de treino por turno atingido (${maxTrain} Fuzileiros).`);
+            return;
+        	}
+    	}
+
+    let costMat = type === 'fuzileiro' ? 50 : (type === 'terminator' ? 125 : 400);
+    if (game.materials >= costMat) {
+        game.materials -= costMat;
+        if (type === 'fuzileiro') game.fuzileirosTrainedThisTurn++;
+        pendingOrders.push({ type: 'recruit', unitType: type });
+        log(`⚔️ Treinamento de ${type} enfileirado.`);
+        updateUI(); saveGame();
+    } else { alert("Materiais insuficientes."); }
+}
 
         /* TRIGGERS DE FIM DE TURNO */
         
