@@ -492,6 +492,18 @@
         .build-card:hover {
             border-color: var(--gold);
         }
+		
+		.planet-name {
+    		font-size: 1.45em; /* NOME DO PLANETA */
+    		font-weight: bold;
+		}
+		
+		.epic-planet {
+    		font-size: 1.25em; /* ALCUNHA DO PLANETA */
+    		font-weight: bold;
+    		color: var(--gold-bright);
+		}
+	
     </style>
 </head>
 <body>
@@ -516,7 +528,7 @@
         <div class="left-section">
             <h3 class="section-title">Status do Exército</h3>
             <div id="roster-summary" style="font-size: 0.75em; background: #080b0f; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; display: flex; flex-direction: column; gap: 4px;"></div>
-            <button onclick="toggleModal('quartel-modal', true)">Gerenciar Quartel & Doutrinas ➔</button>
+            <button onclick="toggleModal('quartel-modal', true)">Gerenciar Quartel e Doutrinas ➔</button>
 
             <h3 class="section-title" style="margin-top: 15px;">Relatório Estratégico</h3>
             <div class="log-area">
@@ -686,7 +698,7 @@
         <div class="modal-content" style="flex-direction: column; gap: 15px;">
             
             <div class="tab-nav">
-                <button class="tab-btn active" onclick="switchQuartelTab('unidades')">🛡️ Doutrinas & Tropas</button>
+                <button class="tab-btn active" onclick="switchQuartelTab('unidades')">🛡️ Doutrinas e Tropas</button>
                 <button class="tab-btn" onclick="switchQuartelTab('inimigos')">👁️ Arquivo de Inimigos</button>
             </div>
 
@@ -697,7 +709,7 @@
                     <button class="doctrine-btn" id="doc-btn-nenhuma" onclick="selectDoctrine('nenhuma')"><strong>Nenhuma</strong><br><small>Sem bônus.</small></button>
                     <button class="doctrine-btn" id="doc-btn-devastacao" onclick="selectDoctrine('devastacao')"><strong>Devastação</strong><br><small>+10% Poder total.</small></button>
                     <button class="doctrine-btn" id="doc-btn-tatica" onclick="selectDoctrine('tatica')"><strong>Tática</strong><br><small>+1 Resistência por rodada (máx +5).</small></button>
-                    <button class="doctrine-btn" id="doc-btn-assalto" onclick="selectDoctrine('assalto')"><strong>Assalto</strong><br><small>+5% Iniciativa flat em todas as rodadas & +5 Poder na 1ª rodada.</small></button>
+                    <button class="doctrine-btn" id="doc-btn-assalto" onclick="selectDoctrine('assalto')"><strong>Assalto</strong><br><small>+5% Iniciativa flat em todas as rodadas e +5 Poder na 1ª rodada.</small></button>
                 </div>
 
                 <div style="flex: 1; display: flex; flex-direction: column; gap: 10px;">
@@ -810,7 +822,7 @@
             probeActive: false,
             probeConsecutiveTurns: 0,
             fuzileirosTrainedThisTurn: 0,
-            doutrinaAtiva: 'nenhuma',
+            activedoctrine: 'nenhuma',
             pendingDoctrine: null,
             requisitionsUsedThisTurn: { suprimentos: false, rota: false, reforcos: false },
             units: {
@@ -862,7 +874,7 @@
         let planets = [
             {
                 id: 1,
-                name: "Baal Primus (Mundo Natal)",
+                name: "Baal Primus",
                 status: "colonizado",
                 isHomeWorld: true,
                 raidStatus: "SAFE",
@@ -913,30 +925,37 @@
             }
         }
 
+		// DOUTRINAS
+	
         function selectDoctrine(doc) {
-            if (doc === game.doutrinaAtiva) {
-                game.pendingDoctrine = null;
-                log(`📜 Doutrina mantida como: ${doc.toUpperCase()}`);
-            } else {
-                game.pendingDoctrine = doc;
-                log(`📜 Transição de Doutrina agendada para o fim do turno: ${doc.toUpperCase()}`);
+				
+            if (doc === game.activedoctrine) {
+        		log(`📜 Doutrina mantida como: ${doc.toUpperCase()}`);
+    		} else {
+                game.activedoctrine = doc;
+        		game.pendingDoctrine = null;
+				log(`🎖️ Doutrina militar alterada instantaneamente para: ${doc.toUpperCase()}`);
             }
+			
             updateDoctrineUI();
-            saveGame();
-        }
+    		updateUI();
+    		saveGame();
+		}
 
         function updateDoctrineUI() {
-            document.querySelectorAll('.doctrine-btn').forEach(btn => {
-                btn.classList.remove('active');
-                btn.style.borderColor = 'var(--border-color)';
-            });
-            let currentDoc = game.pendingDoctrine || game.doutrinaAtiva;
-            let activeBtn = document.getElementById(`doc-btn-${currentDoc}`);
-            if (activeBtn) {
-                activeBtn.classList.add('active');
-                if (game.pendingDoctrine) activeBtn.style.borderColor = '#f59e0b';
-            }
-        }
+    		// Atualiza o visual dos botões
+    		document.querySelectorAll('.doctrine-btn').forEach(btn => {
+        	btn.classList.remove('active');
+        	btn.style.borderColor = 'var(--border-color)';
+    		});
+    
+    		// Destaca a Doutrina ativa atualmente
+    		let activeBtn = document.getElementById(`doc-btn-${game.activedoctrine}`);
+    		if (activeBtn) {
+        	activeBtn.classList.add('active');
+        	activeBtn.style.borderColor = '#f59e0b';
+    		}		
+		}
 
         function getProbeConfig() {
             let hasProbeTech = game.techs.probes && (typeof game.techs.probes === 'object' ? game.techs.probes.level > 0 : game.techs.probes);
@@ -969,7 +988,7 @@
                 try {
                     const parsed = JSON.parse(savedData);
                     game = parsed.game;
-                    if (!game.doutrinaAtiva) game.doutrinaAtiva = 'nenhuma';
+                    if (!game.activedoctrine) game.activedoctrine = 'nenhuma';
                     planets = parsed.planets || [];
                     activeOperations = parsed.activeOperations || [];
                     currentReport = parsed.currentReport || currentReport;
@@ -1153,16 +1172,32 @@
                 }
             });
         }
-
+		// CONTABILIZA AS UNIDADES
         function getTotalTroopsSlots() {
-            return game.units.fuzileiro.count + game.units.terminator.count + (game.units.dreadnought.count * 2);
-        }
+    		let fuzCount = game.units.fuzileiro.count;
+    		let termCount = game.units.terminator.count;
+    		let dreadCount = game.units.dreadnought.count;
 
-        function getActiveQuartelCount() {
-            let count = 0;
-            planets.forEach(p => { if (p.status === 'colonizado') p.slots.forEach(s => { if (s === 'quartel') count++; }); });
-            return count;
-        }
+    		// SOMA AS UNIDADES MOBILIZADAS
+    		activeOperations.forEach(op => {
+        	if (op.mobilizedForces) {
+            fuzCount += op.mobilizedForces.fuz || 0;
+            termCount += op.mobilizedForces.term || 0;
+            dreadCount += op.mobilizedForces.dread || 0;
+        	}
+    		});
+
+    		// SOMA AS UNIDADES EM TREINAMENTO
+    		if (game.trainingQueue && Array.isArray(game.trainingQueue)) {
+        	game.trainingQueue.forEach(item => {
+            if (item.unit === 'fuzileiro') fuzCount += item.amount || 1;
+            if (item.unit === 'terminator') termCount += item.amount || 1;
+            if (item.unit === 'dreadnought') dreadCount += item.amount || 1;
+        	});
+    	}
+
+    return fuzCount + termCount + (dreadCount * 2);
+}
 
         function updateUI() {
             document.getElementById('header-turn').innerText = game.turn;
@@ -1198,7 +1233,7 @@
             const summaryBox = document.getElementById('roster-summary');
             if (summaryBox) {
                 summaryBox.innerHTML = `
-                    <div>📜 Doutrina: <strong style="color:var(--gold-bright);">${game.doutrinaAtiva.toUpperCase()}</strong></div>
+                    <div>📜 Doutrina: <strong style="color:var(--gold-bright);">${game.activedoctrine.toUpperCase()}</strong></div>
                     <div>🔹 Fuzileiros: <strong>${game.units.fuzileiro.count}</strong></div>
                     <div>🔸 Terminators: <strong>${game.units.terminator.count}</strong></div>
                     <div>⚙️ Dreadnoughts: <strong>${game.units.dreadnought.count}</strong></div>
@@ -1214,6 +1249,22 @@
                 `;
             }
         }
+		
+		function getActiveQuartelCount() {
+        	let count = 0;
+    		if (typeof planets !== 'undefined') {
+        	planets.push // apenas garantindo leitura segura
+        	planets.forEach(p => {
+            if (p.slots && Array.isArray(p.slots)) {
+                p.slots.forEach(slot => {
+                if (slot === 'quartel' || slot === 'Quartel') count++;
+                });
+            }
+        	});
+    	}
+
+    	return Math.max(1, count);
+		}
 
         function getDifficultyClass(threatName) {
             if (threatName === 'Fácil') return 'diff-facil';
@@ -1237,7 +1288,7 @@
                 if (p.raidStatus === "ATTACK") div.classList.add('attack');
 
                 if (p.status === 'destruido') {
-                    div.innerHTML = `<div><strong>${p.name}</strong> <small style="color: #ef4444;">Exerivado</small></div>`;
+                    div.innerHTML = `<div><strong class="planet-name">${p.name}</strong> <small style="color: #ef4444;">Exerivado</small></div>`;
                 } else if (p.status === 'colonizado') {
                     let slotsHtml = '';
                     p.slots.forEach((s, idx) => {
@@ -1266,23 +1317,30 @@
                         raidBadge = `<span class="badge badge-attack">Sob Ataque (${p.attackTurns}T)</span>`;
                         raidAction = `<button onclick="openCombatModal('planet_raid', ${p.id}, 'DEFEND')" style="background:#8b0000; padding:2px 6px; font-size:0.7em;">Defender</button>`;
                     }
-
-                    let expBtn = p.expansionLevel < p.maxExpansion ? `<button onclick="queueExpandPlanet(${p.id})" style="padding: 2px 6px; font-size: 0.7em;">⬆️ Expandir (${p.expansionLevel * 150} Mat)</button>` : `<small style="color: var(--gold);">Nv. Máx</small>`;
+					
+					let expBtn = "";
+						if (p.expansionTurns > 0) { // Aviso de "Em expansão"
+    						expBtn = `<span style="color: #fbbf24; font-weight: bold; background: rgba(251, 191, 36, 0.1); padding: 4px 10px; border-radius: 4px; font-size: 0.9em;">⚠️ Em expansão...</span>`;
+						} else {
+    					expBtn = p.expansionLevel < p.maxExpansion // Botão de Expandir
+        				? `<button onclick="queueExpandPlanet(${p.id})" style="padding: 5px 12px; font-size: 0.9em;">⬆️ Expandir (Nv. ${p.expansionLevel}/${p.maxExpansion}) - ${p.expansionLevel * 150} Mat</button>` 
+        				: `<small style="color: var(--gold);">Nv. Máx</small>`;
+						}
 
                     div.innerHTML = `
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div><strong>${p.name}</strong> ${p.isHomeWorld ? '<span style="color:var(--gold);">(Capital)</span>' : ''} ${raidBadge}</div>
-                            <div style="display:flex; gap:6px; align-items:center;">${raidAction} ${expBtn}</div>
+                        <div><strong class="planet-name">${p.name}</strong> ${p.isHomeWorld ? '<span class="epic-planet">(Mundo Natal)</span>' : ''} ${raidBadge}</div>
+                        <div style="display:flex; gap:6px; align-items:center;">${raidAction} ${expBtn}</div>
                         </div>
-                        <div style="font-size: 0.7em; color: var(--gold); margin-top: 2px;">${p.trait}</div>
+                        <div style="font-size: 1.1em; color: var(--gold); margin-top: 2px;">${p.trait}</div>
                         <div class="slot-grid">${slotsHtml}</div>
                     `;
                 } else if (p.status === 'colonizando') {
-                    div.innerHTML = `<div><strong>${p.name}</strong><br><small style="color: var(--gold-bright);">⏳ Colonizando...</small></div>`;
+                    div.innerHTML = `<div><strong class="planet-name">${p.name}</strong><br><small style="color: var(--gold-bright);">⏳ Colonizando...</small></div>`;
                 } else if (p.status === 'limpo') {
                     div.innerHTML = `
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div><strong>${p.name}</strong><br><small style="color: #34d399;">Pronto para Colonizar</small></div>
+                            <div><strong class="planet-name">${p.name}</strong><br><small style="color: #34d399;">Pronto para Colonizar</small></div>
                             <button onclick="queueColonizePlanet(${p.id})">Colonizar (100 Mat)</button>
                         </div>
                     `;
@@ -1291,7 +1349,7 @@
                     div.innerHTML = `
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
-                                <strong>${p.name}</strong><br>
+                                <strong class="planet-name">${p.name}</strong><br>
                                 <span class="faction-badge ${facInfo.badgeClass}">Alvo: ${facInfo.nome}</span> <span class="${getDifficultyClass(p.threatName)}">[${p.threatName}]</span>
                             </div>
                             <button onclick="openCombatModal('planet', ${p.id})">Atacar / Limpar</button>
@@ -1377,8 +1435,20 @@
             rewardMat: 150,
             rewardResearch: 0,
             rewardRequisition: true
-        	}
+        	},
+			{
+    		title: "Resgatar Soldados",
+    		faction: "neutral",
+    		diff: 2,
+    		diffName: "Médio",
+    		rewardMat: 0,
+   			rewardResearch: 0,
+    		rewardRequisition: false,
+    		rewardTroops: { type: "fuzileiro", amount: 2 }
+			}
     		];
+			
+			
 			
 			// CHANCE DE PROCEDURAL X PRE-MONTADA
 			if (Math.random() < 0.30 && especialop.length > 0) {
@@ -1394,7 +1464,7 @@
             	rewardRequisition: especialSalada.rewardRequisition || false,
             	mobilizedForces: null
         	};
-    }
+    		}
 
     		// OPERAÇÕES PROCEDURAIS
     		const titulosProcedurais = [
@@ -1408,7 +1478,7 @@
     		const tituloAleatorio = titulosProcedurais[Math.floor(Math.random() * titulosProcedurais.length)];
     		let faccaoSorteada = getRandomFaction();
     
-    		// Operações contra Mercenários NÃO devem passar da dificuldade Médio (2)
+    		// REGRA: Operações Mercenários NÃO devem passar da dificuldade Médio (2)
 			let maxDiff = game.turn > 10 ? 4 : 3;
     		let diffSorteada = Math.floor(Math.random() * maxDiff) + 1;
     
@@ -1459,15 +1529,23 @@
             updateUI(); saveGame();
         }
 
-        function queueExpandPlanet(id) {
-            let p = planets.find(x => x.id === id);
-            let cost = p.expansionLevel * 150;
-            if (game.materials < cost) { alert("Materiais insuficientes."); return; }
-            game.materials -= cost;
-            pendingOrders.push({ type: 'expand', targetId: id });
-            log(`⬆️ Expansão agendada para ${p.name}.`);
-            updateUI(); saveGame();
-        }
+        function queueExpandPlanet(planetId) {
+    		let p = planets.find(planet => planet.id === planetId);
+    		if (!p) return;
+
+    		let custo = p.expansionLevel * 150;
+    		if (game.materials < custo) {
+        	alert("Materiais insuficientes para expandir o planeta!");
+        	return;
+    		}
+
+    		game.materials -= custo;
+    		p.expansionTurns = 1; // Turnos para a Expansão de Planetas
+   
+    		log(`📡 Expansão estará pronta no próximo turno.`);
+    		updateUI();
+    		saveGame();
+		}
 
         function openBuildMenu(planetId, slotIdx) {
             let p = planets.find(x => x.id === planetId);
@@ -1558,12 +1636,12 @@
 
             combatLogLines.push(`Início do engajamento tático contra <strong>${facInfo.nome}</strong> em: <strong>${targetTitle}</strong>.`);
             combatLogLines.push(`Força destacada: ${fuz} Fuzileiros, ${term} Terminators, ${dread} Dreadnoughts.`);
-            combatLogLines.push(`Doutrina Ativa: <strong>${game.doutrinaAtiva.toUpperCase()}</strong>.`);
+            combatLogLines.push(`Doutrina Ativa: <strong>${game.activedoctrine.toUpperCase()}</strong>.`);
 
             for (let round = 1; round <= 5; round++) {
                 combatLogLines.push(`<br>--- Rodada ${round} ---`);
                 let totalPower = (activeFuz * 5) + (activeTerm * 12) + (activeDread * 20);
-                if (game.doutrinaAtiva === 'devastacao') totalPower = Math.ceil(totalPower * 1.10);
+                if (game.activedoctrine === 'devastacao') totalPower = Math.ceil(totalPower * 1.10);
 
                 if (isHomeWorld || raidAction) {
                     totalPower += 5;
@@ -1637,13 +1715,10 @@
         }
 
         /* TRIGGERS DE FIM DE TURNO */
-        function nextTurn() {
-            if (game.pendingDoctrine) {
-                game.doutrinaAtiva = game.pendingDoctrine;
-                game.pendingDoctrine = null;
-            }
-
-            game.turn++;
+        
+			/* TRIGGER: TREINAMENTO DE UNIDADES */
+		function nextTurn() {
+			game.turn++;
             game.fuzileirosTrainedThisTurn = 0;
             game.requisitionsUsedThisTurn = { suprimentos: false, rota: false, reforcos: false };
 
@@ -1700,27 +1775,39 @@
                             let res = resolveCombatSimulation(forces.fuz, forces.term, forces.dread, op.diff, targetTitle, facKey);
                             success = res.success; survivors = res.survivors; logLines = res.logLines;
 							
+							// RECOMPENSAS DE OPERAÇÕES
                             if (success) {
-							totalOpIncomeThisTurn += op.rewardMat;
-								game.materials += op.rewardMat;
-        						currentReport.operations.push(`Operação "${op.title}" bem sucedida (+${op.rewardMat} Mat).`);
-								
-								// REQUISIÇÃO EXTRA //
-								let reqTextoExtra = "";
-    							if (op.rewardRequisition) {
-        						game.requisition += 1;
-        						reqTextoExtra = " | 📜 +1 Requisição";
-    							}
-        
-        						// NOVA OPERAÇÃO GERADA ALEATORIAMENTE //
-        						let novaOp = newopgeneration();
-        						activeOperations[opIndex] = novaOp;
-        						currentReport.alerts.push(`Nova operação disponível: "${novaOp.title}" (${FACCOES_INIMIGAS[novaOp.faction].nome}).`);
-														
-                            	} else {
-                                op.mobilizedForces = null;
-                                currentReport.operations.push(`Operação "${op.title}" falhou em cumprir os objetivos.`);
-                            	}
+    						totalOpIncomeThisTurn += op.rewardMat;
+    						game.materials += op.rewardMat;
+    
+    						let recompensasTexto = `+${op.rewardMat} Mat`;
+
+    						// RECOMPENSA PESQUISA
+    						if (op.rewardResearch > 0) {
+        					game.research += op.rewardResearch;
+        					recompensasTexto += ` | +${op.rewardResearch} Pesq`;
+    						}
+
+    						// RECOMPENSA REQUISIÇÃO
+    						if (op.rewardRequisition) {
+        					game.requisition += 1;
+        					recompensasTexto += ` | +1 Requisição`;
+    						}
+
+    						// RECOMPENSA UNIDADE
+    						if (op.rewardTroops && op.rewardTroops.amount > 0) {
+        					let tipoTropa = op.rewardTroops.type || 'fuzileiro';
+        					game.units[tipoTropa].count += op.rewardTroops.amount;
+        					recompensasTexto += ` | +${op.rewardTroops.amount} ${tipoTropa}(s) resgatados`;
+    						}
+
+    						currentReport.operations.push(`Operação "${op.title}" bem sucedida (${recompensasTexto}).`);
+    
+    						// GERA UMA NOVA OPERAÇÃO
+    						let novaOp = newopgeneration();
+    						activeOperations[opIndex] = novaOp;
+    						currentReport.alerts.push(`Nova operação disponível: "${novaOp.title}" (${FACCOES_INIMIGAS[novaOp.faction].nome}).`);
+							}
                         }
 
                         game.units.fuzileiro.count += survivors.fuz;
@@ -1737,8 +1824,22 @@
                 });
                 pendingOrders = [];
             }
+			
+			// NEXTURN: EXPANSÃO DE PLANETAS			
+			planets.forEach(p => {
+    			if (p.expansionTurns !== undefined && p.expansionTurns > 0) {
+        		p.expansionTurns--; 
+        		if (p.expansionTurns === 0) {
+            	p.expansionLevel++;
+            	if (p.slots) {
+                p.slots.push('vazio');
+            	}
+            	currentReport.alerts.push(`🏗️ Expansão concluída no planeta <strong>${p.name}</strong>! Subiu para o Nível ${p.expansionLevel}.`);
+        		}
+    		}
+		});
 
-            // 2. Geração de Recursos
+            // NEXTURN: GERAÇÃO DE RECURSOS
             let totalMatProduced = 0;
             let totalResProduced = 0;
             let farmBoostLevel = (typeof game.techs.farmboost === 'object') ? game.techs.farmboost.level : 0;
@@ -1774,7 +1875,7 @@
                 finalMat: game.materials
             };
 
-            // 3. Conclusão de Construções
+            // NEXTURN: CONCLUSÃO DE CONSTRUÇÕES
             planets.forEach(p => {
                 if (p.status === 'colonizado') {
                     for (let i = 0; i < p.slots.length; i++) {
@@ -1789,7 +1890,7 @@
                 }
             });
 
-            // 4. Raids e Ameaças
+            // NEXTURN: RAIDS E AMEAÇAS
             planets.forEach(p => {
                 if (p.status !== 'colonizado') return;
 
@@ -1872,23 +1973,21 @@
             updateUI(); saveSnapshot(); saveGame();
             toggleModal('report-modal', true);
 			
-			// PROCESSO DE VARREDURA DA SONDA
+			// NEXTURN: VARREDURA DA SONDA
 			let probeCfg = getProbeConfig();
 				if (game.probeActive) {
 					game.probeConsecutiveTurns++;    
-    		// Define a chance com base na tecnologia (25% com Tech, 20% sem Tech)
+    		
     		let hasProbeTech = game.techs.probes && (typeof game.techs.probes === 'object' ? game.techs.probes.level > 0 : game.techs.probes);
     		let chanceEncontrar = hasProbeTech ? 0.25 : 0.20;
     
-    		// Rola um número aleatório entre 0 e 1 para testar a sorte da sonda neste turno
     		let achouPorSorte = Math.random() < chanceEncontrar;
     
-    		// Se atingiu o limite máximo de turnos (4 ou 5) OU deu sorte no RNG da varredura
     		if (game.probeConsecutiveTurns >= probeCfg.maxTurns || achouPorSorte) {
         		game.probeActive = false;
         		game.probeConsecutiveTurns = 0;
         
-        	// Cria um novo planeta procedural para o império
+        	// Cria um novo planeta procedural
 			let nomePlaneta = proceduralNames[Math.floor(Math.random() * proceduralNames.length)] + " " + proceduralSuffixes[Math.floor(Math.random() * proceduralSuffixes.length)];
         	let traitObj = proceduralTraits[Math.floor(Math.random() * proceduralTraits.length)];
         
@@ -1908,11 +2007,14 @@
             	mobilizedForces: null
         	});
         
-        	currentReport.alerts.push(`✨ Sonda concluiu a varredura com sucesso! Novo mundo descoberto: <strong>${nomePlaneta}</strong>.`);
+        		currentReport.alerts.push(`✨ Sonda concluiu a varredura com sucesso! Novo mundo descoberto: <strong>${nomePlaneta}</strong>.`);
     			} else {
         		currentReport.alerts.push(`📡 Sonda em progresso (${game.probeConsecutiveTurns}/${probeCfg.maxTurns} - Varredura em andamento...).`);
     			}	
 			}
+				
+			updateUI(); saveSnapshot(); saveGame();
+            toggleModal('report-modal', true);
         }
 
         /* RELATÓRIO DO TURNO COM COMBATES E BALANÇO COMPLETO */
