@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warhammer 40k: Campanha do Capítulo (Grimdark 12.3 - Report Refinements)</title>
+    <title>Warhammer 40k: Campanha do Capítulo</title>
     <style>
         :root {
             --bg-dark: #050709;
@@ -149,14 +149,14 @@
         }
 
         .slot {
-            width: 28px;
-            height: 28px;
+            width: 32px;
+            height: 32px;
             background: #090d12;
             border: 1px dashed var(--border-color);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.85em;
+            font-size: 1.15em;
             border-radius: 3px;
             cursor: pointer;
             transition: all 0.2s;
@@ -167,7 +167,7 @@
         }
 
         .slot.filled {
-            border: 1px solid var(--gold);
+            border: 1.25px solid var(--gold);
             background: #1a222f;
         }
 
@@ -175,7 +175,7 @@
             border: 1px dashed var(--gold-bright);
             background: #1f1b09;
             color: var(--gold-bright);
-            font-size: 0.65em;
+            font-size: 1em;
             text-align: center;
         }
 
@@ -517,7 +517,8 @@
             <div class="res-badge">📜 Req: <span id="res-req">1</span></div>
             <div class="res-badge">📦 Mat: <span id="res-mat">250</span></div>
             <div class="res-badge">🔬 Pesq: <span id="res-research">0</span></div>
-            <div class="res-badge">⚔️ Cont: <span id="res-troops">3</span>/<span id="res-max-troops">3</span></div>
+            <div class="res-badge">⚔️ Contingente Disponível: <span id="res-troops">3</span>/<span id="res-max-troops">3</span></div>
+			<div class="res-badge">⚠️ Ameaças no Setor: <span id="res-threat">0/200 (Setor Estabilizado)</span></div>
             <button onclick="toggleModal('req-modal', true)" class="header-btn" style="background: linear-gradient(180deg, #78350f 0%, #451a03 100%); border-color: #f59e0b;">🏛️ Requisições</button>
             <button onclick="toggleModal('quartel-modal', true)" class="header-btn" style="background: linear-gradient(180deg, #374151 0%, #1f2937 100%);">⚔️ Quartel</button>
             <button onclick="toggleModal('tech-modal', true)" class="header-btn" style="background: linear-gradient(180deg, #1e3a8a 0%, #172554 100%);">🔬 Tech</button>
@@ -825,6 +826,7 @@
             activedoctrine: 'nenhuma',
             pendingDoctrine: null,
             requisitionsUsedThisTurn: { suprimentos: false, rota: false, reforcos: false },
+			sectorThreat: 0,
             units: {
                 fuzileiro: { count: 3, power: 5, resistance: 5 },
                 terminator: { count: 0, power: 12, resistance: 8 },
@@ -839,7 +841,7 @@
                 logistics: { level: 0, max: 1 },
                 academic: { level: 0, max: 1 }
             }
-        };
+		};
 
         const TECH_DEFINITIONS = {
             militar: [
@@ -889,12 +891,12 @@
             }
         ];
 
-        let activeOperations = [
-            { id: 101, title: "Saque a Comboio Ork", faction: "orks", diff: 1, diffName: "Fácil", rewardMat: 100, rewardResearch: 0, mobilizedForces: null },
-            { id: 102, title: "Purificação de Culto Herético", faction: "hereges", diff: 2, diffName: "Médio", rewardMat: 150, rewardResearch: 0, mobilizedForces: null },
-            { id: 103, title: "Escavação de Tumba Necron", faction: "necrons", diff: 3, diffName: "Difícil", rewardMat: 200, rewardResearch: 1, mobilizedForces: null }
-        ];
-
+        // Operações iniciais
+		let activeOperations = [];
+		for (let i = 0; i < 3; i++) {
+    		activeOperations.push(newopgeneration());
+			}
+		
         let pendingOrders = [];
         let pendingCombatTask = null;
         let activeBuildTarget = null;
@@ -908,12 +910,7 @@
             { trait: "Nexo de Telecomunicação: Laboratórios neste planeta geram +1 Pesq", traitType: "tech" }
         ];
 
-        function getRandomFaction() {
-            const facs = ["neutral", "orks", "hereges", "necrons"];
-            return facs[Math.floor(Math.random() * facs.length)];
-        }
-
-        function switchQuartelTab(tabName) {
+       function switchQuartelTab(tabName) {
             document.querySelectorAll('#quartel-modal .tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('#quartel-modal .tab-content').forEach(c => c.classList.remove('active'));
             if (tabName === 'unidades') {
@@ -957,6 +954,7 @@
     		}		
 		}
 
+		// SONDAS
         function getProbeConfig() {
             let hasProbeTech = game.techs.probes && (typeof game.techs.probes === 'object' ? game.techs.probes.level > 0 : game.techs.probes);
             return { cost: hasProbeTech ? 100 : 125, maxTurns: hasProbeTech ? 4 : 5 };
@@ -966,7 +964,7 @@
             if (planets.length >= 10) { alert("Limite máximo de 10 planetas atingido."); return; }
             let probeCfg = getProbeConfig();
             if (!game.probeActive) {
-                if (game.materials < probeCfg.cost) { alert(`Materiais insuficientes (${probeCfg.cost} Mat).`); return; }
+                if (materialcredit < probeCfg.cost) { alert(`Materiais insuficientes (${probeCfg.cost} Mat).`); return; }
                 game.materials -= probeCfg.cost;
                 game.probeActive = true;
                 game.probeConsecutiveTurns = 0;
@@ -993,6 +991,7 @@
                     activeOperations = parsed.activeOperations || [];
                     currentReport = parsed.currentReport || currentReport;
                     pendingOrders = parsed.pendingOrders || [];
+					if (game.sectorThreat === undefined) game.sectorThreat = 0;
                     return true;
                 } catch(e) { console.error(e); }
             }
@@ -1049,11 +1048,6 @@
             updateTechUI(); updateUI(); saveGame();
         }
 		
-		// CALCULA AS UNIDADES DISPONÍVEIS
-		function getAvailableTroopsSlots() { 
-    		return game.units.fuzileiro.count + game.units.terminator.count + (game.units.dreadnought.count * 2);
-		}
-
         function openExterminatusSelector() {
             if (game.requisition < 10) { alert("Exige 10 Requisições."); return; }
             toggleModal('req-modal', false);
@@ -1150,7 +1144,7 @@
             let techState = game.techs[techId];
             let currentLevel = typeof techState === 'object' ? techState.level : (techState ? 1 : 0);
             if (currentLevel >= (techDef.maxLevel || 1)) { alert("Tecnologia já maximizada."); return; }
-            if (game.research < techDef.costRes || game.materials < techDef.costMat) { alert("Recursos insuficientes."); return; }
+            if (game.research < techDef.costRes || materialcredit < techDef.costMat) { alert("Recursos insuficientes."); return; }
 
             game.research -= techDef.costRes; game.materials -= techDef.costMat;
             if (typeof game.techs[techId] === 'object') game.techs[techId].level++;
@@ -1177,6 +1171,7 @@
                 }
             });
         }
+		
 		// CONTABILIZA AS UNIDADES
         function getTotalTroopsSlots() {
     		let fuzCount = game.units.fuzileiro.count;
@@ -1200,8 +1195,13 @@
         	if (order.unitType === 'dreadnought') dreadCount += 1;
     		}
 			});
-    	
-    return fuzCount + termCount + (dreadCount * 2);
+			  	
+    	return fuzCount + termCount + (dreadCount * 2);
+		}
+		
+		// CALCULA AS UNIDADES DISPONÍVEIS
+		function getAvailableTroopsSlots() { 
+    		return game.units.fuzileiro.count + game.units.terminator.count + (game.units.dreadnought.count * 2);
 		}
 
         function updateUI() {
@@ -1216,6 +1216,17 @@
             document.getElementById('res-max-troops').innerText = game.maxTroops;
             document.getElementById('modal-res-troops').innerText = getTotalTroopsSlots();
             document.getElementById('modal-res-max-troops').innerText = game.maxTroops;
+			
+			// Deixa os materiais em vermelho enquanto negativo
+			let matEl = document.getElementById('res-mat');
+				matEl.innerText = game.materials;
+				matEl.style.color = game.materials < 0 ? '#ef4444' : '';
+			
+			// Ameaça do Setor
+			let threatInfo = getSectorThreatStatus();
+			let threatEl = document.getElementById('res-threat');
+				threatEl.innerText = `${game.sectorThreat}/200 (${threatInfo.name})`;
+				threatEl.style.color = threatInfo.color;
 
             let probeBtn = document.getElementById('btn-probe');
             let probeBar = document.getElementById('probe-status-bar');
@@ -1258,7 +1269,7 @@
 		function getActiveQuartelCount() {
         	let count = 0;
     		if (typeof planets !== 'undefined') {
-        	planets.push // apenas garantindo leitura segura
+        	planets.push 
         	planets.forEach(p => {
             if (p.slots && Array.isArray(p.slots)) {
                 p.slots.forEach(slot => {
@@ -1270,14 +1281,6 @@
 
     	return Math.max(1, count);
 		}
-
-        function getDifficultyClass(threatName) {
-            if (threatName === 'Fácil') return 'diff-facil';
-            if (threatName === 'Médio') return 'diff-medio';
-            if (threatName === 'Difícil') return 'diff-dificil';
-            if (threatName === 'Muito Difícil') return 'diff-muito-dificil';
-            return '';
-        }
 
         function renderPlanets() {
             const container = document.getElementById('planets-container');
@@ -1364,6 +1367,8 @@
                 container.appendChild(div);
             });
         }
+		
+		// OPERAÇÕES
 
         function renderOperations() {
             const container = document.getElementById('operations-container');
@@ -1375,16 +1380,18 @@
                 let isMobilized = op.mobilizedForces !== null;
                 div.className = `op-card ${isMobilized ? 'mobilized' : ''}`;
                 let facInfo = FACCOES_INIMIGAS[op.faction || 'orks'];
+				
+				let pesquisaTexto = op.rewardResearch > 0 ? ` | 🔬 +${op.rewardResearch} Pesq` : '';
 
                 let content = `
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <strong>${op.title}</strong>
-                        <span class="${getDifficultyClass(op.diffName)}">[${op.diffName}]</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
-                        <span class="faction-badge ${facInfo.badgeClass}">${facInfo.nome}</span>
-                        <span style="font-size:0.8em; color:var(--gold-bright);">📦 +${op.rewardMat} Mat ${op.rewardResearch > 0 ? `| 🔬 +${op.rewardResearch} Pesq` : ''}</span>
-                    </div>
+                		<strong>${op.isSpecial === true ? '⭐ ' : ''}${op.title}</strong>
+                		<span class="${getDifficultyClass(op.diffName)}">[${op.diffName}]</span>
+            		</div>
+            		<div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
+                		<span class="faction-badge ${facInfo.badgeClass}">${facInfo.nome}</span>
+                		<span style="font-size:0.8em; color:var(--gold-bright);">📦 +${op.rewardMat} Mat${pesquisaTexto}</span>
+            		</div>
                 `;
 
                 if (isMobilized) {
@@ -1430,8 +1437,10 @@
             diffName: "Médio",
             rewardMat: 100,
             rewardResearch: 1,
-            rewardRequisition: false
+            rewardRequisition: false,
+			isSpecial: true
         	},
+			
         	{
             title: "Exterminar Cultos Hereges",
             faction: "hereges",
@@ -1439,8 +1448,10 @@
             diffName: "Difícil",
             rewardMat: 150,
             rewardResearch: 0,
-            rewardRequisition: true
+            rewardRequisition: true,
+			isSpecial: true
         	},
+				
 			{
     		title: "Resgatar Soldados",
     		faction: "neutral",
@@ -1449,11 +1460,11 @@
     		rewardMat: 0,
    			rewardResearch: 0,
     		rewardRequisition: false,
-    		rewardTroops: { type: "fuzileiro", amount: 2 }
+    		rewardTroops: { type: "fuzileiro", amount: 2 },
+			isSpecial: true
 			}
+			
     		];
-			
-			
 			
 			// CHANCE DE PROCEDURAL X PRE-MONTADA
 			if (Math.random() < 0.30 && especialop.length > 0) {
@@ -1467,8 +1478,10 @@
             	rewardMat: especialSalada.rewardMat,
             	rewardResearch: especialSalada.rewardResearch,
             	rewardRequisition: especialSalada.rewardRequisition || false,
+				rewardTroops: especialSalada.rewardTroops || null,
+				isSpecial: true,
             	mobilizedForces: null
-        	};
+        		};
     		}
 
     		// OPERAÇÕES PROCEDURAIS
@@ -1483,50 +1496,38 @@
     		const tituloAleatorio = titulosProcedurais[Math.floor(Math.random() * titulosProcedurais.length)];
     		let faccaoSorteada = getRandomFaction();
     
-    		// REGRA: Operações Mercenários NÃO devem passar da dificuldade Médio (2)
-			let maxDiff = game.turn > 10 ? 4 : 3;
-    		let diffSorteada = Math.floor(Math.random() * maxDiff) + 1;
-    
-    		if (faccaoSorteada === "neutral" && diffSorteada > 2) {
-        	diffSorteada = Math.floor(Math.random() * 2) + 1; // Força a ser 1 (Fácil) ou 2 (Médio)
-    		}
-    
+    		
+			// Puxa o Gerador de Combate
+    		let combatBase = generateCombat();
+			  
 			// Recompensas Procedurais
-    		let nomeDiff = "Fácil";
-    		let matReward = 75;
-    		let resReward = 0;
-    		if (diffSorteada === 2) {
-        		nomeDiff = "Médio";
-        		matReward = 125;
-    		} else if (diffSorteada === 3) {
-        		nomeDiff = "Difícil";
-        		matReward = 200;
-        		resReward = 1;
-    		} else if (diffSorteada === 4) {
-        		nomeDiff = "Muito Difícil";
-        		matReward = 300;
-        		resReward = 2;
-    		}
+			let matReward = 75;
+			if (combatBase.diff === 2) matReward = 125;
+			else if (combatBase.diff === 3) matReward = 200;
+			else if (combatBase.diff === 4) matReward = 300;
+			
+			// Pesquisa
+            let resReward = (combatBase.diff >= 3 && Math.random() < 0.4) ? 1 : 0;
 
     		// Requisição Adicional
     		let ganhaReq = Math.random() < 0.20;
-
-    		return {
-        		id: Date.now() + Math.floor(Math.random() * 1000),
-        		title: tituloAleatorio,
-        		faction: faccaoSorteada,
-        		diff: diffSorteada,
-        		diffName: nomeDiff,
-        		rewardMat: matReward,
-				rewardResearch: resReward,
-        		rewardRequisition: ganhaReq,
-        		mobilizedForces: null
-    		};
+			
+			return {
+    			id: Date.now() + Math.floor(Math.random() * 1000),
+    			title: tituloAleatorio,
+    			faction: combatBase.faction,
+    			diff: combatBase.diff,
+    			diffName: combatBase.diffName,
+    			rewardMat: matReward,
+    			rewardResearch: resReward,
+    			rewardRequisition: ganhaReq,
+    			mobilizedForces: null
+			};
 		}
 		
         function queueColonizePlanet(id) {
             let p = planets.find(x => x.id === id);
-            if (game.materials < 100) { alert("Materiais insuficientes."); return; }
+            if (!materialcredit(100)) { alert("Crédito de Materiais insuficiente."); return; }
             game.materials -= 100;
             p.status = 'colonizando';
             pendingOrders.push({ type: 'colonize', targetId: id });
@@ -1539,10 +1540,7 @@
     		if (!p) return;
 
     		let custo = p.expansionLevel * 150;
-    		if (game.materials < custo) {
-        	alert("Materiais insuficientes para expandir o planeta!");
-        	return;
-    		}
+    		if (!materialcredit(custo)) { alert("Materiais insuficientes."); return; }
 
     		game.materials -= custo;
     		p.expansionTurns = 1; // Turnos para a Expansão de Planetas
@@ -1566,7 +1564,7 @@
             let p = planets.find(x => x.id === activeBuildTarget.planetId);
             if (!p) return;
 
-            if (game.materials >= cost) {
+            if (materialcredit(cost)) {
                 game.materials -= cost;
                 p.slots[activeBuildTarget.slotIdx] = `building_${type}`;
                 log(`🔨 Construção de ${type.toUpperCase()} agendada em ${p.name}.`);
@@ -1579,7 +1577,7 @@
         }
 
         function clearRuins(planetId, slotIdx) {
-            if (game.materials < 25) { alert("Necessário 25 Materiais para limpar os Destroços (🔥)."); return; }
+            if (materialcredit < 25) { alert("Necessário 25 Materiais para limpar os Destroços (🔥)."); return; }
             let p = planets.find(x => x.id === planetId);
             if (p && p.slots[slotIdx] === 'ruins') {
                 game.materials -= 25;
@@ -1630,8 +1628,87 @@
             log(`⚔️ Tropas alocadas para combate.`);
             updateUI(); saveGame();
         }
+		
+		/* AMEAÇA DO SETOR */
+		function getSectorThreatStatus() {
+    		let t = game.sectorThreat;
+    		if (t <= 40) return { name: "Setor Estabilizado", color: "#34d399" };
+    		if (t <= 80) return { name: "Setor em Tensão", color: "#fbbf24" };
+    		if (t <= 120) return { name: "Setor em Conflito", color: "#f97316" };
+    		if (t <= 160) return { name: "Setor em Crise", color: "#ef4444" };
+    		return { name: "Setor Devastado", color: "#991b1b" };
+			}
+		
+		// SEÇÃO DE COMBATE
+		
+		// DIFICULDADE BASEADA NA AMEAÇA
+        function rollMissionDifficulty() {
+            let t = game.sectorThreat;
+    		let roll = Math.random() * 100;
 
-        /* SIMULAÇÃO DE COMBATE DETALHADA COM LOG DE RODADAS */
+    			// Setor Estabilizado (45% / 35% / 15% / 5%)
+    			if (t <= 40) {
+        		if (roll < 45) return { diff: 1, diffName: 'Fácil' };
+        		if (roll < 80) return { diff: 2, diffName: 'Médio' };
+        		if (roll < 95) return { diff: 3, diffName: 'Difícil' };
+        		return { diff: 4, diffName: 'Muito Difícil' };
+    			}
+    			// Setor em Tensão (30% / 40% / 20% / 10%)
+    			if (t <= 80) {
+        		if (roll < 30) return { diff: 1, diffName: 'Fácil' };
+        		if (roll < 70) return { diff: 2, diffName: 'Médio' };
+				if (roll < 90) return { diff: 3, diffName: 'Difícil' };
+        		return { diff: 4, diffName: 'Muito Difícil' };
+    			}
+    			// Setor em Conflito (15% / 30% / 35% / 20%)
+    			if (t <= 120) {
+        		if (roll < 15) return { diff: 1, diffName: 'Fácil' };
+        		if (roll < 45) return { diff: 2, diffName: 'Médio' };
+        		if (roll < 80) return { diff: 3, diffName: 'Difícil' };
+        		return { diff: 4, diffName: 'Muito Difícil' };
+    			}
+    			// Setor em Crise (5% / 20% / 40% / 35%)
+    			if (t <= 160) {
+        		if (roll < 5) return { diff: 1, diffName: 'Fácil' };
+				if (roll < 25) return { diff: 2, diffName: 'Médio' };
+				if (roll < 65) return { diff: 3, diffName: 'Difícil' };
+        		return { diff: 4, diffName: 'Muito Difícil' };
+    			}
+    			// Setor em Chamas (0% / 10% / 35% / 55%)
+    			if (roll < 10) return { diff: 2, diffName: 'Médio' };
+    			if (roll < 45) return { diff: 3, diffName: 'Difícil' };
+    			return { diff: 4, diffName: 'Muito Difícil' };
+				}
+		
+		// ESTILIZAÇÃO DIFICULDADES
+		function getDifficultyClass(threatName) {
+    		if (threatName === 'Fácil') return 'diff-facil';
+    		if (threatName === 'Médio') return 'diff-medio';
+    		if (threatName === 'Difícil') return 'diff-dificil';
+    		if (threatName === 'Muito Difícil') return 'diff-muito-dificil';
+    		return '';
+			}
+		
+		/* GERADOR DE Facção */
+		 function getRandomFaction() {
+            const facs = ["neutral", "orks", "hereges", "necrons"];
+            return facs[Math.floor(Math.random() * facs.length)];
+		 }
+		
+		/* GERADOR DE COMBATES */
+		function generateCombat(factionKey = null) {
+    		let d = rollMissionDifficulty(); // Baseado na Ameaça do Setor
+        			
+    		let faction = factionKey || getRandomFaction();
+
+    		return {
+        		diff: d.diff,
+        		diffName: d.diffName,
+        		faction: faction,
+            };
+		}
+		
+        /* SIMULAÇÃO DE COMBATE */
         function resolveCombatSimulation(fuz, term, dread, threatLevel, targetTitle, facKey, isHomeWorld = false, raidAction = null) {
             let activeFuz = fuz, activeTerm = term, activeDread = dread;
             let success = false;
@@ -1698,6 +1775,15 @@
                     break;
                 }
             }
+			if (success) {
+    			let reduction = Math.floor(Math.random() * 6) + 10; // Reduz entre 10 e 15
+    			game.sectorThreat = Math.max(0, game.sectorThreat - reduction);
+    			combatLogLines.push(`📉 <strong>Ordem Restaurada:</strong> Ameaça do Setor reduzida em <strong>-${reduction}</strong> (Atual: ${game.sectorThreat}/200).`);
+			} else {
+    			let escalation = Math.floor(Math.random() * 6) + 12; // Aumenta entre 12 e 17
+    			game.sectorThreat = Math.min(200, game.sectorThreat + escalation);
+    			combatLogLines.push(`📈 <strong>Insurreição Crescente:</strong> Ameaça do Setor aumentou em <strong>+${escalation}</strong> (Atual: ${game.sectorThreat}/200).`);
+				}
             return { success, survivors: { fuz: activeFuz, term: activeTerm, dread: activeDread }, logLines: combatLogLines };
         }
 
@@ -1708,8 +1794,13 @@
             document.getElementById('combat-log-body').innerHTML = logData.lines.join('<br>');
             toggleModal('combat-log-modal', true);
         }
-
-        function recruitUnit(type) {
+			
+		/* CRÉDITO DE MATERIAIS */
+		function materialcredit(cost) {
+    		return (game.materials - cost) >= -500;
+			}
+		
+		function recruitUnit(type) {
     		let slotsNeeded = (type === 'dreadnought') ? 2 : 1;
     		if (getTotalTroopsSlots() + slotsNeeded > game.maxTroops) {
         	alert("Limite de contingente do Capítulo atingido!");
@@ -1725,7 +1816,7 @@
     	}
 
     let costMat = type === 'fuzileiro' ? 50 : (type === 'terminator' ? 125 : 400);
-    if (game.materials >= costMat) {
+    if (materialcredit(costMat)) {
         game.materials -= costMat;
         if (type === 'fuzileiro') game.fuzileirosTrainedThisTurn++;
         pendingOrders.push({ type: 'recruit', unitType: type });
@@ -1749,8 +1840,13 @@
             };
 
             let totalOpIncomeThisTurn = 0;
+			
+			// Aumento da Ameaça do Setor //
+			let passiveThreat = Math.floor(Math.random() * 6) + 4; // +4 a +9
+			let thresholdBonus = Math.floor(game.sectorThreat / 40); // +1 por limiar atingido
+			game.sectorThreat = Math.min(200, game.sectorThreat + passiveThreat + thresholdBonus);
 
-            // 1. Processar Ações do Jogador //
+            // Ações do Jogador //
             if (pendingOrders.length > 0) {
                 pendingOrders.forEach(order => {
                     if (order.type === 'recruit') {
