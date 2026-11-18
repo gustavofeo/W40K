@@ -891,12 +891,7 @@
             }
         ];
 
-        // Operações iniciais
 		let activeOperations = [];
-		for (let i = 0; i < 3; i++) {
-    		activeOperations.push(newopgeneration());
-			}
-		
         let pendingOrders = [];
         let pendingCombatTask = null;
         let activeBuildTarget = null;
@@ -1381,7 +1376,12 @@
                 div.className = `op-card ${isMobilized ? 'mobilized' : ''}`;
                 let facInfo = FACCOES_INIMIGAS[op.faction || 'orks'];
 				
-				let pesquisaTexto = op.rewardResearch > 0 ? ` | 🔬 +${op.rewardResearch} Pesq` : '';
+				let extrasTexto = '';
+                	if (op.rewardResearch > 0) extrasTexto += ` | 🔬 +${op.rewardResearch} Pesq`;
+                	if (op.rewardRequisition) extrasTexto += ` | 📜 +1 Req`;
+                	if (op.rewardTroops && op.rewardTroops.amount > 0) {
+                    extrasTexto += ` | ⚔️ +${op.rewardTroops.amount} ${op.rewardTroops.type || 'fuzileiro'}`;
+                	}
 
                 let content = `
                     <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -1390,7 +1390,7 @@
             		</div>
             		<div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
                 		<span class="faction-badge ${facInfo.badgeClass}">${facInfo.nome}</span>
-                		<span style="font-size:0.8em; color:var(--gold-bright);">📦 +${op.rewardMat} Mat${pesquisaTexto}</span>
+                		<span style="font-size:1em; color:var(--gold-bright);">📦 +${op.rewardMat} Mat${extrasTexto}</span>
             		</div>
                 `;
 
@@ -1400,7 +1400,7 @@
                         <div style="background: #111827; padding: 4px 6px; border-radius: 3px; font-size: 0.85em; color: var(--gold-bright); border: 1px solid var(--gold); margin-top: 4px;">
                             📍 <strong>Mobilizados:</strong> ${f.fuz > 0 ? `🔹${f.fuz} Fuz` : ''} ${f.term > 0 ? `🔸${f.term} Term` : ''} ${f.dread > 0 ? `⚙️${f.dread} Dread` : ''}
                         </div>
-                        <button onclick="cancelOperationMobilization(${index})" style="background: linear-gradient(180deg, #991b1b 0%, #7f1d1d 100%); border-color: #ef4444; width: 100%; text-align: center; margin-top: 4px;">↩️ Cancelar Operação (Devolver Tropas)</button>
+                        <button onclick="cancelOperationMobilization(${index})" style="background: linear-gradient(180deg, #991b1b 0%, #7f1d1d 100%); border-color: #ef4444; width: 100%; text-align: center; margin-top: 4px;">↩️ Cancelar Operação</button>
                     `;
                 } else {
                     content += `<button onclick="openCombatModal('operation', ${index})" style="margin-top: 4px; width: 100%;">Escalar Operação</button>`;
@@ -1440,7 +1440,6 @@
             rewardRequisition: false,
 			isSpecial: true
         	},
-			
         	{
             title: "Exterminar Cultos Hereges",
             faction: "hereges",
@@ -1450,8 +1449,7 @@
             rewardResearch: 0,
             rewardRequisition: true,
 			isSpecial: true
-        	},
-				
+        	},	
 			{
     		title: "Resgatar Soldados",
     		faction: "neutral",
@@ -1463,11 +1461,10 @@
     		rewardTroops: { type: "fuzileiro", amount: 2 },
 			isSpecial: true
 			}
-			
     		];
 			
-			// CHANCE DE PROCEDURAL X PRE-MONTADA
-			if (Math.random() < 0.30 && especialop.length > 0) {
+			// CHANCE DE PROCEDURAL X ESPECIAL
+			if (Math.random() < 0.05 && especialop.length > 0) {
         		let especialSalada = especialop[Math.floor(Math.random() * especialop.length)];
         		return {
             	id: Date.now() + Math.floor(Math.random() * 1000),
@@ -1506,9 +1503,6 @@
 			else if (combatBase.diff === 3) matReward = 200;
 			else if (combatBase.diff === 4) matReward = 300;
 			
-			// Pesquisa
-            let resReward = (combatBase.diff >= 3 && Math.random() < 0.4) ? 1 : 0;
-
     		// Requisição Adicional
     		let ganhaReq = Math.random() < 0.20;
 			
@@ -1519,8 +1513,10 @@
     			diff: combatBase.diff,
     			diffName: combatBase.diffName,
     			rewardMat: matReward,
-    			rewardResearch: resReward,
+    			rewardResearch: 0,
     			rewardRequisition: ganhaReq,
+				rewardTroops: null,
+				isSpecial: false,
     			mobilizedForces: null
 			};
 		}
@@ -1813,17 +1809,17 @@
             alert(`Limite de treino por turno atingido (${maxTrain} Fuzileiros).`);
             return;
         	}
-    	}
+    		}
 
-    let costMat = type === 'fuzileiro' ? 50 : (type === 'terminator' ? 125 : 400);
-    if (materialcredit(costMat)) {
-        game.materials -= costMat;
-        if (type === 'fuzileiro') game.fuzileirosTrainedThisTurn++;
-        pendingOrders.push({ type: 'recruit', unitType: type });
-        log(`⚔️ Treinamento de ${type} enfileirado.`);
-        updateUI(); saveGame();
-    } else { alert("Materiais insuficientes."); }
-}
+    		let costMat = type === 'fuzileiro' ? 50 : (type === 'terminator' ? 125 : 400);
+    		if (materialcredit(costMat)) {
+        		game.materials -= costMat;
+        		if (type === 'fuzileiro') game.fuzileirosTrainedThisTurn++;
+        		pendingOrders.push({ type: 'recruit', unitType: type });
+        		log(`⚔️ Treinamento de ${type} enfileirado.`);
+        		updateUI(); saveGame();
+    			} else { alert("Materiais insuficientes."); }
+		}
 
         /* TRIGGERS DE FIM DE TURNO */
         
@@ -1891,26 +1887,26 @@
                             let res = resolveCombatSimulation(forces.fuz, forces.term, forces.dread, op.diff, targetTitle, facKey);
                             success = res.success; survivors = res.survivors; logLines = res.logLines;
 							
-							// RECOMPENSAS DE OPERAÇÕES
+							// RECOMPENSAS DE OPERAÇÕES: MATERIAIS
                             if (success) {
     						totalOpIncomeThisTurn += op.rewardMat;
     						game.materials += op.rewardMat;
     
     						let recompensasTexto = `+${op.rewardMat} Mat`;
 
-    						// RECOMPENSA PESQUISA
+    						// RECOMPENSAS DE OPERAÇÕES: PESQUISA
     						if (op.rewardResearch > 0) {
         					game.research += op.rewardResearch;
         					recompensasTexto += ` | +${op.rewardResearch} Pesq`;
     						}
 
-    						// RECOMPENSA REQUISIÇÃO
+    						// RECOMPENSAS DE OPERAÇÕES: REQUISIÇÃO
     						if (op.rewardRequisition) {
         					game.requisition += 1;
         					recompensasTexto += ` | +1 Requisição`;
     						}
 
-    						// RECOMPENSA UNIDADE
+    						// RECOMPENSAS DE OPERAÇÕES: UNIDADES
     						if (op.rewardTroops && op.rewardTroops.amount > 0) {
         					let tipoTropa = op.rewardTroops.type || 'fuzileiro';
         					game.units[tipoTropa].count += op.rewardTroops.amount;
@@ -2182,9 +2178,28 @@
 
         window.onload = function() {
             let loaded = loadGame();
-            if (loaded) { log("📂 Save carregado."); } else { saveSnapshot(); }
+            
+            if (loaded) { 
+                log("📂 Save carregado."); 
+                // SE AS OPERAÇÕES ESTIVEREM VAZIAS, ELE CRIA NOVAS
+                if (!activeOperations || activeOperations.length === 0) {
+                    for (let i = 0; i < 3; i++) {
+                        activeOperations.push(newopgeneration());
+                    }
+                }
+            } else { 
+                // CRIA TRÊS OPERAÇÕES NO INÍCIO DA PARTIDA
+                activeOperations = [];
+                for (let i = 0; i < 3; i++) {
+                activeOperations.push(newopgeneration());
+                }
+                saveSnapshot();
+				saveGame();
+            	}
+            
             updateUI();
         };
+		
     </script>
 </body>
 </html>
