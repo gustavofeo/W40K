@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ni<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -121,10 +121,11 @@
             background: #161205;
         }
 
-        .planet-management-card.threat {
-            border-left-color: #f59e0b;
-            background: #231b18;
-        }
+		.planet-management-card.alert {
+    		border-left-color: #f59e0b;
+    		background: #231b18;
+		}
+		
         .planet-management-card.attack {
             border-left-color: var(--danger);
             background: #2a1618;
@@ -880,7 +881,7 @@
                 status: "colonizado",
                 isHomeWorld: true,
                 raidStatus: "SAFE",
-                threatTurns: 0,
+                alertTurns: 0,
                 attackTurns: 0,
                 expansionLevel: 1,
                 maxExpansion: 5,
@@ -1287,7 +1288,7 @@
                 let isMobilized = p.mobilizedForces !== null;
                 div.className = `planet-management-card ${isMobilized ? 'mobilized' : ''}`;
 
-                if (p.raidStatus === "THREAT") div.classList.add('threat');
+                if (p.raidStatus === "ALERT") div.classList.add('alert');
                 if (p.raidStatus === "ATTACK") div.classList.add('attack');
 
                 if (p.status === 'destruido') {
@@ -1313,8 +1314,8 @@
 
                     let raidBadge = "";
                     let raidAction = "";
-                    if (p.raidStatus === "THREAT") {
-                        raidBadge = `<span class="badge badge-threat">Ameaça Eminente (${p.threatTurns}T)</span>`;
+                    if (p.raidStatus === "ALERT") {
+                        raidBadge = `<span class="badge badge-threat">Ameaça Eminente (${p.alertTurns}T)</span>`;
                         raidAction = `<button onclick="openCombatModal('planet_raid', ${p.id}, 'COUNTER')" style="background:#8b0000; padding:2px 6px; font-size:0.7em;">Contraofensiva</button>`;
                     } else if (p.raidStatus === "ATTACK") {
                         raidBadge = `<span class="badge badge-attack">Sob Ataque (${p.attackTurns}T)</span>`;
@@ -2006,13 +2007,13 @@
             planets.forEach(p => {
                 if (p.status !== 'colonizado') return;
 
-                if (p.raidStatus === "THREAT") {
+                if (p.raidStatus === "ALERT") {
                     p.threatTurns++;
                     let chanceToAttack = p.threatTurns >= 5 ? 1.0 : 0.25;
                     if (Math.random() < chanceToAttack) {
                         p.raidStatus = "ATTACK";
                         p.threatTurns = 0; p.attackTurns = 1;
-                        currentReport.planetEvents.push(`⚠️ A Ameaça Eminente em ${p.name} se transformou em SOB ATAQUE!`);
+                        currentReport.planetEvents.push(`⚠️ A AMEAÇA EMINENTE EM ${p.name} COMEÇOU UM ATAQUE!`);
                     }
                 } else if (p.raidStatus === "ATTACK") {
                     p.attackTurns++;
